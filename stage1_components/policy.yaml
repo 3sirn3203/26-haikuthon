@@ -1,0 +1,25 @@
+seed: 20261106
+binding_holdouts: 64
+relation_holdouts: 512
+train_counts: {2: 1000, 3: 1800, 4: 1200}
+train_baseline_counts: {2: 240, 3: 120, 4: 40}
+test_contrast_counts: {2: 1320, 3: 3000, 4: 2080, 5: 600, 6: 200}
+test_baseline_counts: {2: 480, 3: 240, 4: 80}
+novelty_weights: {binding: 0.4, relation: 0.4, both: 0.2}
+relation_weights: {horizontal: 0.30, vertical: 0.15, 'on': 0.15, inside: 0.10, next_to: 0.10, holding: 0.10, wearing: 0.05, riding: 0.05}
+domain_weights: {tableware: 400, food: 320, produce: 240, tools: 320, stationery: 280, toys_shapes: 280, clothing_accessories: 320, furniture_interior: 320, animals_pets: 320, animals_farm_wild: 280, plants_garden: 240, sports_outdoors: 280, vehicles_transport: 240, people_daily: 160}
+style_weights: {photograph: 800, render_3d: 600, watercolor: 400, flat_illustration: 400, colored_pencil: 300, gouache: 300, oil_painting: 300, paper_cut: 200, clay_render: 200, low_poly_3d: 200, pencil_sketch: 150, ink_drawing: 150}
+minimum_category_scenes: {train: 16, test: 32}
+train_diversity: {minimum_units: 5, minimum_relation_partners: 4}
+repeated_category_fraction: 0.10
+ranking:
+  max_inventory_rows: 24
+  max_category_fraction: 0.045
+  max_person_fraction: 0.30
+  minimum_distinct_test_inventories: 450
+  minimum_count_variation: 0.15
+  minimum_category_variation: 0.15
+  minimum_nonspatial_relation_variation: 0.15
+  minimum_attribute_swap: 0.05
+  max_one_object_attribute_and_direction: 0.20
+attempt_limit: 12000

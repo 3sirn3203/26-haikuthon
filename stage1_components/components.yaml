@@ -1,0 +1,5435 @@
+# Shared, editable source registry for both train and test.
+version: 1.0.0
+description: Shared component pool for both train and test; no split-specific object
+  definitions.
+domains:
+  tableware:
+    label:
+      ko: 식기와 주방 도구
+      en: tableware and kitchenware
+  food:
+    label:
+      ko: 빵과 조리 음식
+      en: bakery and prepared food
+  produce:
+    label:
+      ko: 과일과 채소
+      en: fruit and vegetables
+  tools:
+    label:
+      ko: 작업 도구
+      en: hand tools and workshop objects
+  stationery:
+    label:
+      ko: 문구와 책
+      en: stationery and books
+  toys_shapes:
+    label:
+      ko: 장난감과 입체 도형
+      en: toys and geometric solids
+  clothing_accessories:
+    label:
+      ko: 의류와 휴대용품
+      en: clothing and accessories
+  furniture_interior:
+    label:
+      ko: 가구와 실내 소품
+      en: furniture and interior objects
+  animals_pets:
+    label:
+      ko: 반려동물과 소동물
+      en: pets and small animals
+  animals_farm_wild:
+    label:
+      ko: 농장 동물과 야생동물
+      en: farm animals and wildlife
+  plants_garden:
+    label:
+      ko: 식물과 원예
+      en: plants and gardening
+  sports_outdoors:
+    label:
+      ko: 스포츠와 야외 활동
+      en: sports and outdoor equipment
+  vehicles_transport:
+    label:
+      ko: 교통수단과 운반
+      en: vehicles and transport
+  people_daily:
+    label:
+      ko: 사람의 일상 활동과 기기
+      en: people, daily activities and devices
+capabilities:
+  human:
+    definition: 사람 개체. 직업·성별·나이 등 미지정 세부 정보는 추가하지 않는다.
+  animal:
+    definition: 사람을 제외한 동물.
+  plant:
+    definition: 식물 개체.
+  portable:
+    definition: 한 사람이 손으로 들어 표현할 수 있는 크기의 물체.
+  container:
+    definition: 내용물을 넣을 수 있는 용기. 실제 들어갈 수 있는 크기는 장면에서 별도 검사.
+  openable:
+    definition: 열림/닫힘을 시각적으로 구별할 수 있음.
+  support_surface:
+    definition: 다른 물체를 올려 지지하는 표면.
+  seating:
+    definition: 사람이나 동물이 앉을 수 있는 가구.
+  wearable:
+    definition: 사람이 몸에 착용할 수 있는 물품.
+  wearable_core:
+    definition: 초기 wearing에 사용할 단일 모자·헬멧·스카프·배낭.
+  rideable:
+    definition: 사람이 위에 올라앉는 탑승 자세를 표현할 수 있음.
+  pushable:
+    definition: 손잡이 또는 프레임에 손을 대고 미는 자세를 표현할 수 있음.
+  pullable:
+    definition: 손잡이를 잡아 당기는 자세를 표현할 수 있음.
+  readable:
+    definition: 펼친 상태에서 읽는 자세를 표현할 수 있는 책·노트.
+  instrument:
+    definition: playing 자세의 대상인 악기.
+  hangable:
+    definition: 매달린 상태를 표현할 수 있음.
+  hanging_support:
+    definition: 물체를 매달아 지지할 수 있는 구조.
+  leanable:
+    definition: 면이나 긴 몸체를 기대어 놓을 수 있음.
+  leaning_support:
+    definition: 기대는 물체를 지지할 수 있는 면.
+  vehicle:
+    definition: 교통수단.
+  large_subject:
+    definition: 작은 실내 공간과 충돌하거나 wide 구도가 필요한 큰 대상.
+  food:
+    definition: 먹을 수 있는 개체. 정확한 count는 완성된 하나의 단위로 센다.
+count:
+  type: integer
+  allowed_values:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  default_values:
+  - 1
+  - 2
+  - 3
+  - 4
+  review_required_values:
+  - 5
+  - 6
+  definition: 그룹별 정확한 수. category 전체 수는 서로 구별되는 그룹의 합. 신발·장갑은 개별 한 짝, 선글라스는 완성된 한
+    개.
+attributes:
+  color:
+    label:
+      ko: 색
+      en: color
+    values:
+      red:
+        ko: 빨간색
+        en: red
+      blue:
+        ko: 파란색
+        en: blue
+      yellow:
+        ko: 노란색
+        en: yellow
+      green:
+        ko: 초록색
+        en: green
+      black:
+        ko: 검은색
+        en: black
+      white:
+        ko: 흰색
+        en: white
+      brown:
+        ko: 갈색
+        en: brown
+      gray:
+        ko: 회색
+        en: gray
+      orange:
+        ko: 주황색
+        en: orange
+      purple:
+        ko: 보라색
+        en: purple
+      pink:
+        ko: 분홍색
+        en: pink
+      beige:
+        ko: 베이지색
+        en: beige
+    definition: 개체의 주된 가시 색. 종 고유 무늬를 지우거나 모든 부분이 단색이라고 자동으로 해석하지 않는다.
+  material:
+    label:
+      ko: 재질
+      en: material
+    values:
+      ceramic:
+        ko: 도자기
+        en: ceramic
+      metal:
+        ko: 금속
+        en: metal
+      wood:
+        ko: 나무
+        en: wood
+      glass:
+        ko: 유리
+        en: glass
+      plastic:
+        ko: 플라스틱
+        en: plastic
+      cardboard:
+        ko: 골판지
+        en: cardboard
+      paper:
+        ko: 종이
+        en: paper
+      fabric:
+        ko: 직물
+        en: fabric
+      leather:
+        ko: 가죽
+        en: leather
+      rubber:
+        ko: 고무
+        en: rubber
+      stone:
+        ko: 돌
+        en: stone
+      wicker:
+        ko: 등나무 등으로 엮은 재질
+        en: wicker
+  pose:
+    label:
+      ko: 자세
+      en: pose
+    values:
+      standing:
+        ko: 서 있는
+        en: standing
+      sitting:
+        ko: 앉아 있는
+        en: sitting
+      lying:
+        ko: 누워 있는
+        en: lying
+      crouching:
+        ko: 몸을 웅크린
+        en: crouching
+      kneeling:
+        ko: 무릎을 꿇은
+        en: kneeling
+      perching:
+        ko: 횃대나 지지물 위에 앉은
+        en: perching
+      flying:
+        ko: 날고 있는 자세
+        en: flying
+  state:
+    label:
+      ko: 상태
+      en: state
+    values:
+      open:
+        ko: 열린 또는 펼친
+        en: open
+      closed:
+        ko: 닫힌 또는 접힌
+        en: closed
+      folded:
+        ko: 접힌
+        en: folded
+      unfolded:
+        ko: 펼친
+        en: unfolded
+      inflated:
+        ko: 공기가 들어 있는
+        en: inflated
+      deflated:
+        ko: 공기가 빠진
+        en: deflated
+      lit:
+        ko: 불이 켜진
+        en: lit
+      unlit:
+        ko: 불이 꺼진
+        en: unlit
+  pattern:
+    label:
+      ko: 무늬
+      en: pattern
+    values:
+      solid:
+        ko: 무늬 없는 단색
+        en: solid-colored
+      striped:
+        ko: 줄무늬
+        en: striped
+      polka_dot:
+        ko: 물방울무늬
+        en: polka-dotted
+      checkered:
+        ko: 체크무늬
+        en: checkered
+      floral:
+        ko: 꽃무늬
+        en: floral
+      zigzag:
+        ko: 지그재그무늬
+        en: zigzag-patterned
+  shape:
+    label:
+      ko: 물체의 외곽 형태
+      en: shape
+    values:
+      round:
+        ko: 둥근
+        en: round
+      square:
+        ko: 정사각형
+        en: square
+      rectangular:
+        ko: 직사각형
+        en: rectangular
+      triangular:
+        ko: 삼각형
+        en: triangular
+      oval:
+        ko: 타원형
+        en: oval
+      hexagonal:
+        ko: 육각형
+        en: hexagonal
+  finish:
+    label:
+      ko: 표면 광택
+      en: surface finish
+    values:
+      matte:
+        ko: 무광
+        en: matte
+      glossy:
+        ko: 유광
+        en: glossy
+  transparency:
+    label:
+      ko: 투명도
+      en: transparency
+    values:
+      transparent:
+        ko: 투명한
+        en: transparent
+      translucent:
+        ko: 반투명한
+        en: translucent
+      opaque:
+        ko: 불투명한
+        en: opaque
+  orientation:
+    label:
+      ko: 물체의 자세
+      en: object orientation
+    values:
+      upright:
+        ko: 바로 세운
+        en: upright
+      lying_flat:
+        ko: 평평하게 눕힌
+        en: lying flat
+      inverted:
+        ko: 거꾸로 놓은
+        en: upside down
+  facing:
+    label:
+      ko: 바라보는 방향
+      en: facing direction
+    values:
+      left:
+        ko: 관찰자 기준 왼쪽을 향한
+        en: facing left
+      right:
+        ko: 관찰자 기준 오른쪽을 향한
+        en: facing right
+      toward_viewer:
+        ko: 관찰자를 향한
+        en: facing the viewer
+      away_from_viewer:
+        ko: 관찰자에게 등을 보인
+        en: facing away from the viewer
+  texture:
+    label:
+      ko: 표면 질감
+      en: surface texture
+    values:
+      smooth:
+        ko: 매끈한
+        en: smooth
+      ribbed:
+        ko: 골이 있는
+        en: ribbed
+      woven:
+        ko: 짜임이 보이는
+        en: woven
+      knitted:
+        ko: 뜨개질 짜임
+        en: knitted
+      fuzzy:
+        ko: 보송한 털 표면
+        en: fuzzy
+attribute_profiles:
+  human:
+    attributes:
+      pose:
+      - standing
+      - sitting
+      - lying
+      - crouching
+      - kneeling
+  fur_animal:
+    attributes:
+      color:
+      - black
+      - white
+      - brown
+      - gray
+      - beige
+      pose:
+      - standing
+      - sitting
+      - lying
+      facing:
+      - left
+      - right
+      - toward_viewer
+      - away_from_viewer
+  bird:
+    attributes:
+      color:
+      - black
+      - white
+      - brown
+      - gray
+      - red
+      - blue
+      - yellow
+      - green
+      pose:
+      - standing
+      - perching
+      - flying
+      facing:
+      - left
+      - right
+      - toward_viewer
+      - away_from_viewer
+  reptile:
+    attributes:
+      color:
+      - green
+      - brown
+      - gray
+      - black
+      facing:
+      - left
+      - right
+      - toward_viewer
+      - away_from_viewer
+  large_animal:
+    attributes:
+      color:
+      - black
+      - white
+      - brown
+      - gray
+      - beige
+      pose:
+      - standing
+      - lying
+      facing:
+      - left
+      - right
+      - toward_viewer
+      - away_from_viewer
+  fixed_animal:
+    attributes:
+      pose:
+      - standing
+      - lying
+      facing:
+      - left
+      - right
+      - toward_viewer
+      - away_from_viewer
+  tableware:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - ceramic
+      - metal
+      - wood
+      - glass
+      - plastic
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+      finish:
+      - matte
+      - glossy
+  glassware:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - glass
+      - plastic
+      transparency:
+      - transparent
+      - translucent
+      shape:
+      - round
+      - square
+  cookware:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - metal
+      - ceramic
+      finish:
+      - matte
+      - glossy
+  cutlery:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - metal
+      - wood
+      - plastic
+      orientation:
+      - lying_flat
+      - inverted
+  box:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - metal
+      - plastic
+      - cardboard
+      state:
+      - open
+      - closed
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+  food:
+    attributes:
+      color:
+      - red
+      - yellow
+      - green
+      - orange
+      - brown
+      - white
+      - beige
+  tool:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      orientation:
+      - lying_flat
+      - upright
+  metal_tool:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - metal
+      orientation:
+      - lying_flat
+      - upright
+  book:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      state:
+      - open
+      - closed
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+  stationery:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - plastic
+      - metal
+      - rubber
+      orientation:
+      - lying_flat
+      - upright
+  paper_item:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - paper
+      - cardboard
+      state:
+      - open
+      - closed
+  soft_case:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - fabric
+      - leather
+      - plastic
+      state:
+      - open
+      - closed
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+  solid_shape:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - metal
+      - plastic
+      - glass
+      - stone
+      finish:
+      - matte
+      - glossy
+  toy:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - plastic
+      - metal
+      facing:
+      - left
+      - right
+  soft_toy:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - fabric
+      texture:
+      - smooth
+      - fuzzy
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+  ball:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - rubber
+      - plastic
+      - leather
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+  clothing:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - fabric
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+      - floral
+      - zigzag
+      texture:
+      - smooth
+      - woven
+      - knitted
+  footwear:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - leather
+      - fabric
+      - rubber
+      pattern:
+      - solid
+      - striped
+  rigid_accessory:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - plastic
+      - metal
+      finish:
+      - matte
+      - glossy
+  umbrella:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      state:
+      - open
+      - closed
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+  furniture:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - metal
+      - plastic
+      - wicker
+      finish:
+      - matte
+      - glossy
+  upholstered:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - fabric
+      - leather
+      pattern:
+      - solid
+      - striped
+      - checkered
+      texture:
+      - smooth
+      - woven
+  cabinet:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - metal
+      - plastic
+      state:
+      - open
+      - closed
+  textile:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - fabric
+      pattern:
+      - solid
+      - striped
+      - polka_dot
+      - checkered
+      - floral
+      texture:
+      - smooth
+      - woven
+      - knitted
+      - fuzzy
+  frame:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - metal
+      - plastic
+      shape:
+      - round
+      - square
+      - rectangular
+      - oval
+      - triangular
+      - hexagonal
+  lamp:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      state:
+      - lit
+      - unlit
+  plant:
+    attributes:
+      color:
+      - green
+  flower:
+    attributes:
+      color:
+      - red
+      - yellow
+      - white
+      - pink
+      - orange
+      - purple
+  planter:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - ceramic
+      - plastic
+      - metal
+      - wood
+      shape:
+      - round
+      - square
+      - rectangular
+  sports_equipment:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      orientation:
+      - lying_flat
+      - upright
+  folding_equipment:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - fabric
+      state:
+      - folded
+      - unfolded
+  vehicle:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      facing:
+      - left
+      - right
+      - toward_viewer
+      - away_from_viewer
+  device:
+    attributes:
+      color:
+      - black
+      - white
+      - gray
+      - blue
+      - red
+      finish:
+      - matte
+      - glossy
+  laptop:
+    attributes:
+      color:
+      - black
+      - white
+      - gray
+      state:
+      - open
+      - closed
+  instrument:
+    attributes:
+      color:
+      - brown
+      - black
+      - white
+      - red
+      - blue
+      material:
+      - wood
+      - plastic
+  weight:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - metal
+      - rubber
+  bottle:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - metal
+      - glass
+      - plastic
+      transparency:
+      - transparent
+      - translucent
+      - opaque
+      shape:
+      - round
+      - square
+  inflatable_ball:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - rubber
+      - leather
+      pattern:
+      - solid
+      - striped
+      state:
+      - inflated
+      - deflated
+  tray:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - wood
+      - metal
+      - plastic
+      - wicker
+      shape:
+      - round
+      - square
+      - rectangular
+      - oval
+      - hexagonal
+      finish:
+      - matte
+      - glossy
+  vase:
+    attributes:
+      color:
+      - red
+      - blue
+      - yellow
+      - green
+      - black
+      - white
+      - brown
+      - gray
+      - orange
+      - purple
+      - pink
+      - beige
+      material:
+      - ceramic
+      - glass
+      - metal
+      - plastic
+      texture:
+      - smooth
+      - ribbed
+      finish:
+      - matte
+      - glossy
+entities:
+  mug:
+    label:
+      ko: 머그잔
+      en: mug
+    kind: object
+    domain: tableware
+    attribute_profile: tableware
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  bowl:
+    label:
+      ko: 그릇
+      en: bowl
+    kind: object
+    domain: tableware
+    attribute_profile: tableware
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  plate:
+    label:
+      ko: 접시
+      en: plate
+    kind: object
+    domain: tableware
+    attribute_profile: tableware
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - finish
+    capabilities:
+    - portable
+    - support_surface
+    count_unit: individual_object
+  bottle:
+    label:
+      ko: 병
+      en: bottle
+    kind: object
+    domain: tableware
+    attribute_profile: bottle
+    supported_attributes:
+    - color
+    - material
+    - transparency
+    - shape
+    capabilities:
+    - portable
+    - container
+    attribute_value_overrides:
+      shape:
+      - round
+      - square
+    count_unit: individual_object
+  drinking_glass:
+    label:
+      ko: 유리잔
+      en: drinking glass
+    kind: object
+    domain: tableware
+    attribute_profile: glassware
+    supported_attributes:
+    - color
+    - material
+    - transparency
+    - shape
+    capabilities:
+    - portable
+    - container
+    attribute_value_overrides:
+      shape:
+      - round
+      - square
+      material:
+      - glass
+    count_unit: individual_object
+  pitcher:
+    label:
+      ko: 물주전자
+      en: pitcher
+    kind: object
+    domain: tableware
+    attribute_profile: glassware
+    supported_attributes:
+    - color
+    - material
+    - transparency
+    - shape
+    capabilities:
+    - portable
+    - container
+    attribute_value_overrides:
+      shape:
+      - round
+      - square
+    count_unit: individual_object
+  teapot:
+    label:
+      ko: 찻주전자
+      en: teapot
+    kind: object
+    domain: tableware
+    attribute_profile: tableware
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  kettle:
+    label:
+      ko: 물 끓이는 주전자
+      en: kettle
+    kind: object
+    domain: tableware
+    attribute_profile: cookware
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  saucepan:
+    label:
+      ko: 손잡이가 긴 냄비
+      en: saucepan
+    kind: object
+    domain: tableware
+    attribute_profile: cookware
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  frying_pan:
+    label:
+      ko: 프라이팬
+      en: frying pan
+    kind: object
+    domain: tableware
+    attribute_profile: cookware
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  tray:
+    label:
+      ko: 쟁반
+      en: tray
+    kind: object
+    domain: tableware
+    attribute_profile: tray
+    supported_attributes:
+    - color
+    - material
+    - shape
+    - finish
+    capabilities:
+    - portable
+    - support_surface
+    count_unit: individual_object
+  spoon:
+    label:
+      ko: 숟가락
+      en: spoon
+    kind: object
+    domain: tableware
+    attribute_profile: cutlery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  fork:
+    label:
+      ko: 포크
+      en: fork
+    kind: object
+    domain: tableware
+    attribute_profile: cutlery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  knife:
+    label:
+      ko: 식탁용 칼
+      en: table knife
+    kind: object
+    domain: tableware
+    attribute_profile: cutlery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  colander:
+    label:
+      ko: 채반
+      en: colander
+    kind: object
+    domain: tableware
+    attribute_profile: cookware
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  food_container:
+    label:
+      ko: 음식 보관 용기
+      en: food container
+    kind: object
+    domain: tableware
+    attribute_profile: box
+    supported_attributes:
+    - color
+    - material
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - container
+    - openable
+    broader_category: box
+    count_unit: individual_object
+  apple:
+    label:
+      ko: 사과
+      en: apple
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - red
+      - green
+      - yellow
+    count_unit: individual_object
+  banana:
+    label:
+      ko: 바나나
+      en: banana
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - yellow
+      - green
+    count_unit: individual_object
+  orange:
+    label:
+      ko: 오렌지
+      en: orange
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - orange
+    count_unit: individual_object
+  lemon:
+    label:
+      ko: 레몬
+      en: lemon
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - yellow
+    count_unit: individual_object
+  pear:
+    label:
+      ko: 배
+      en: pear
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - green
+      - yellow
+      - brown
+    count_unit: individual_object
+  strawberry:
+    label:
+      ko: 딸기
+      en: strawberry
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - red
+    count_unit: individual_object
+  carrot:
+    label:
+      ko: 당근
+      en: carrot
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - orange
+    count_unit: individual_object
+  tomato:
+    label:
+      ko: 토마토
+      en: tomato
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - red
+      - green
+      - yellow
+    count_unit: individual_object
+  broccoli:
+    label:
+      ko: 브로콜리
+      en: broccoli
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - green
+    count_unit: individual_object
+  cucumber:
+    label:
+      ko: 오이
+      en: cucumber
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - green
+    count_unit: individual_object
+  pumpkin:
+    label:
+      ko: 호박
+      en: pumpkin
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - orange
+      - green
+      - white
+    count_unit: individual_object
+  corn_cob:
+    label:
+      ko: 옥수수 한 자루
+      en: ear of corn
+    kind: object
+    domain: produce
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - yellow
+      - white
+    count_unit: one_named_unit_not_ingredients_or_parts
+  egg:
+    label:
+      ko: 달걀
+      en: egg
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - white
+      - brown
+    count_unit: individual_object
+  bread_loaf:
+    label:
+      ko: 빵 한 덩어리
+      en: loaf of bread
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+    count_unit: one_named_unit_not_ingredients_or_parts
+  croissant:
+    label:
+      ko: 크루아상
+      en: croissant
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+    count_unit: individual_object
+  donut:
+    label:
+      ko: 도넛
+      en: donut
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+      - white
+      - pink
+    count_unit: individual_object
+  cupcake:
+    label:
+      ko: 컵케이크
+      en: cupcake
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+      - white
+      - pink
+    count_unit: individual_object
+  pizza_slice:
+    label:
+      ko: 피자 한 조각
+      en: slice of pizza
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - yellow
+      - brown
+    count_unit: one_named_unit_not_ingredients_or_parts
+  sandwich:
+    label:
+      ko: 샌드위치
+      en: sandwich
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+    count_unit: individual_object
+  cookie:
+    label:
+      ko: 쿠키
+      en: cookie
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+    count_unit: individual_object
+  cheese_wedge:
+    label:
+      ko: 쐐기 모양 치즈 한 조각
+      en: wedge of cheese
+    kind: object
+    domain: food
+    attribute_profile: food
+    supported_attributes:
+    - color
+    capabilities:
+    - portable
+    - food
+    attribute_value_overrides:
+      color:
+      - yellow
+      - white
+    count_unit: one_named_unit_not_ingredients_or_parts
+  hammer:
+    label:
+      ko: 망치
+      en: hammer
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  screwdriver:
+    label:
+      ko: 드라이버
+      en: screwdriver
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  wrench:
+    label:
+      ko: 렌치
+      en: wrench
+    kind: object
+    domain: tools
+    attribute_profile: metal_tool
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  pliers:
+    label:
+      ko: 펜치
+      en: pliers
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: one_complete_object_not_components
+  paintbrush:
+    label:
+      ko: 붓
+      en: paintbrush
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  paint_roller:
+    label:
+      ko: 페인트 롤러
+      en: paint roller
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  tape_measure:
+    label:
+      ko: 줄자
+      en: tape measure
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  gardening_trowel:
+    label:
+      ko: 원예용 모종삽
+      en: gardening trowel
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  shovel:
+    label:
+      ko: 삽
+      en: shovel
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    - leanable
+    count_unit: individual_object
+  rake:
+    label:
+      ko: 갈퀴
+      en: rake
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    - leanable
+    count_unit: individual_object
+  hand_saw:
+    label:
+      ko: 수동 톱
+      en: hand saw
+    kind: object
+    domain: tools
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  book:
+    label:
+      ko: 책
+      en: book
+    kind: object
+    domain: stationery
+    attribute_profile: book
+    supported_attributes:
+    - color
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - readable
+    - openable
+    count_unit: individual_object
+  notebook:
+    label:
+      ko: 공책
+      en: notebook
+    kind: object
+    domain: stationery
+    attribute_profile: book
+    supported_attributes:
+    - color
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - readable
+    - openable
+    count_unit: individual_object
+  pencil:
+    label:
+      ko: 연필
+      en: pencil
+    kind: object
+    domain: stationery
+    attribute_profile: stationery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      material:
+      - wood
+    count_unit: individual_object
+  pen:
+    label:
+      ko: 펜
+      en: pen
+    kind: object
+    domain: stationery
+    attribute_profile: stationery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      material:
+      - plastic
+      - metal
+    count_unit: individual_object
+  eraser:
+    label:
+      ko: 지우개
+      en: eraser
+    kind: object
+    domain: stationery
+    attribute_profile: stationery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      material:
+      - rubber
+    count_unit: individual_object
+  ruler:
+    label:
+      ko: 자
+      en: ruler
+    kind: object
+    domain: stationery
+    attribute_profile: stationery
+    supported_attributes:
+    - color
+    - material
+    - orientation
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      material:
+      - wood
+      - plastic
+      - metal
+    count_unit: individual_object
+  scissors:
+    label:
+      ko: 가위
+      en: scissors
+    kind: object
+    domain: stationery
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: one_complete_object_not_components
+  stapler:
+    label:
+      ko: 스테이플러
+      en: stapler
+    kind: object
+    domain: stationery
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  pencil_case:
+    label:
+      ko: 필통
+      en: pencil case
+    kind: object
+    domain: stationery
+    attribute_profile: soft_case
+    supported_attributes:
+    - color
+    - material
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - container
+    - openable
+    count_unit: individual_object
+  envelope:
+    label:
+      ko: 봉투
+      en: envelope
+    kind: object
+    domain: stationery
+    attribute_profile: paper_item
+    supported_attributes:
+    - color
+    - material
+    - state
+    capabilities:
+    - portable
+    - openable
+    count_unit: individual_object
+  clipboard:
+    label:
+      ko: 클립보드
+      en: clipboard
+    kind: object
+    domain: stationery
+    attribute_profile: tool
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  ball:
+    label:
+      ko: 공
+      en: ball
+    kind: object
+    domain: toys_shapes
+    attribute_profile: ball
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    capabilities:
+    - portable
+    definition: 종류를 특정하지 않은 공. basketball 등 하위 category와 같은 장면에서 중복 사용하지 않는다.
+    count_unit: individual_object
+  cube:
+    label:
+      ko: 정육면체
+      en: cube
+    kind: object
+    domain: toys_shapes
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  cylinder:
+    label:
+      ko: 원통
+      en: cylinder
+    kind: object
+    domain: toys_shapes
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  cone:
+    label:
+      ko: 원뿔
+      en: cone
+    kind: object
+    domain: toys_shapes
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  pyramid:
+    label:
+      ko: 각뿔
+      en: pyramid
+    kind: object
+    domain: toys_shapes
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  rectangular_block:
+    label:
+      ko: 직육면체 블록
+      en: rectangular block
+    kind: object
+    domain: toys_shapes
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  star_block:
+    label:
+      ko: 별 모양 블록
+      en: star-shaped block
+    kind: object
+    domain: toys_shapes
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  toy_car:
+    label:
+      ko: 장난감 자동차
+      en: toy car
+    kind: object
+    domain: toys_shapes
+    attribute_profile: toy
+    supported_attributes:
+    - color
+    - material
+    - facing
+    capabilities:
+    - portable
+    count_unit: individual_object
+  toy_train:
+    label:
+      ko: 장난감 기차
+      en: toy train
+    kind: object
+    domain: toys_shapes
+    attribute_profile: toy
+    supported_attributes:
+    - color
+    - material
+    - facing
+    capabilities:
+    - portable
+    count_unit: individual_object
+  teddy_bear:
+    label:
+      ko: 곰 인형
+      en: teddy bear
+    kind: object
+    domain: toys_shapes
+    attribute_profile: soft_toy
+    supported_attributes:
+    - color
+    - material
+    - texture
+    - pattern
+    capabilities:
+    - portable
+    count_unit: individual_object
+  robot_toy:
+    label:
+      ko: 로봇 장난감
+      en: robot toy
+    kind: object
+    domain: toys_shapes
+    attribute_profile: toy
+    supported_attributes:
+    - color
+    - material
+    - facing
+    capabilities:
+    - portable
+    count_unit: individual_object
+  kite:
+    label:
+      ko: 연
+      en: kite
+    kind: object
+    domain: toys_shapes
+    attribute_profile: textile
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    count_unit: individual_object
+  hat:
+    label:
+      ko: 모자
+      en: hat
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    - wearable_core
+    count_unit: individual_object
+  scarf:
+    label:
+      ko: 목도리
+      en: scarf
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    - wearable_core
+    - hangable
+    count_unit: individual_object
+  glove:
+    label:
+      ko: 장갑 한 짝
+      en: single glove
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    count_unit: individual_item_not_pair
+  boot:
+    label:
+      ko: 부츠 한 짝
+      en: single boot
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: footwear
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    capabilities:
+    - portable
+    - wearable
+    count_unit: individual_item_not_pair
+  sneaker:
+    label:
+      ko: 운동화 한 짝
+      en: single sneaker
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: footwear
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    capabilities:
+    - portable
+    - wearable
+    count_unit: individual_item_not_pair
+  backpack:
+    label:
+      ko: 배낭
+      en: backpack
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: soft_case
+    supported_attributes:
+    - color
+    - material
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - container
+    - openable
+    - wearable
+    - wearable_core
+    - hangable
+    count_unit: individual_object
+  handbag:
+    label:
+      ko: 손가방
+      en: handbag
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: soft_case
+    supported_attributes:
+    - color
+    - material
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - container
+    - openable
+    - hangable
+    count_unit: individual_object
+  suitcase:
+    label:
+      ko: 여행용 가방
+      en: suitcase
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: box
+    supported_attributes:
+    - color
+    - material
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - container
+    - openable
+    - pullable
+    attribute_value_overrides:
+      material:
+      - plastic
+      - metal
+    count_unit: individual_object
+  umbrella:
+    label:
+      ko: 우산
+      en: umbrella
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: umbrella
+    supported_attributes:
+    - color
+    - state
+    - pattern
+    capabilities:
+    - portable
+    count_unit: individual_object
+  sunglasses:
+    label:
+      ko: 선글라스 한 개
+      en: pair of sunglasses
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: rigid_accessory
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - wearable
+    count_unit: one_complete_object_not_components
+  helmet:
+    label:
+      ko: 헬멧
+      en: helmet
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: rigid_accessory
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - wearable
+    - wearable_core
+    attribute_value_overrides:
+      material:
+      - plastic
+    count_unit: individual_object
+  watch:
+    label:
+      ko: 손목시계
+      en: wristwatch
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: rigid_accessory
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - wearable
+    attribute_value_overrides:
+      material:
+      - plastic
+      - metal
+    count_unit: individual_object
+  shirt:
+    label:
+      ko: 상의
+      en: shirt
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    - hangable
+    count_unit: individual_object
+  jacket:
+    label:
+      ko: 재킷
+      en: jacket
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    - hangable
+    count_unit: individual_object
+  dress:
+    label:
+      ko: 원피스
+      en: dress
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    - hangable
+    count_unit: individual_object
+  sock:
+    label:
+      ko: 양말 한 짝
+      en: single sock
+    kind: object
+    domain: clothing_accessories
+    attribute_profile: clothing
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    - wearable
+    count_unit: individual_item_not_pair
+  box:
+    label:
+      ko: 상자
+      en: box
+    kind: object
+    domain: furniture_interior
+    attribute_profile: box
+    supported_attributes:
+    - color
+    - material
+    - state
+    - pattern
+    capabilities:
+    - portable
+    - container
+    - openable
+    count_unit: individual_object
+  table:
+    label:
+      ko: 탁자
+      en: table
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - support_surface
+    - leaning_support
+    count_unit: individual_object
+  chair:
+    label:
+      ko: 의자
+      en: chair
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - seating
+    - support_surface
+    - leaning_support
+    count_unit: individual_object
+  stool:
+    label:
+      ko: 등받이 없는 의자
+      en: stool
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - seating
+    - support_surface
+    broader_category: chair
+    count_unit: individual_object
+  bench:
+    label:
+      ko: 벤치
+      en: bench
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - seating
+    - support_surface
+    - leaning_support
+    count_unit: individual_object
+  sofa:
+    label:
+      ko: 소파
+      en: sofa
+    kind: object
+    domain: furniture_interior
+    attribute_profile: upholstered
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - seating
+    - support_surface
+    - leaning_support
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - patio
+    count_unit: individual_object
+  armchair:
+    label:
+      ko: 안락의자
+      en: armchair
+    kind: object
+    domain: furniture_interior
+    attribute_profile: upholstered
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - seating
+    - support_surface
+    - leaning_support
+    broader_category: chair
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - patio
+    count_unit: individual_object
+  shelf:
+    label:
+      ko: 선반
+      en: shelf
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - support_surface
+    - leaning_support
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - patio
+    count_unit: individual_object
+  cabinet:
+    label:
+      ko: 수납장
+      en: cabinet
+    kind: object
+    domain: furniture_interior
+    attribute_profile: cabinet
+    supported_attributes:
+    - color
+    - material
+    - state
+    capabilities:
+    - container
+    - openable
+    - support_surface
+    - leaning_support
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - patio
+    count_unit: individual_object
+  desk:
+    label:
+      ko: 책상
+      en: desk
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - support_surface
+    - leaning_support
+    broader_category: table
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - patio
+    count_unit: individual_object
+  bed:
+    label:
+      ko: 침대
+      en: bed
+    kind: object
+    domain: furniture_interior
+    attribute_profile: upholstered
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - seating
+    - support_surface
+    - large_subject
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - patio
+    count_unit: individual_object
+  rug:
+    label:
+      ko: 러그
+      en: rug
+    kind: object
+    domain: furniture_interior
+    attribute_profile: textile
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities: []
+    count_unit: individual_object
+  cushion:
+    label:
+      ko: 쿠션
+      en: cushion
+    kind: object
+    domain: furniture_interior
+    attribute_profile: textile
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - texture
+    capabilities:
+    - portable
+    count_unit: individual_object
+  wall_clock:
+    label:
+      ko: 벽시계
+      en: wall clock
+    kind: object
+    domain: furniture_interior
+    attribute_profile: frame
+    supported_attributes:
+    - color
+    - material
+    - shape
+    capabilities:
+    - portable
+    - hangable
+    count_unit: individual_object
+  picture_frame:
+    label:
+      ko: 액자
+      en: picture frame
+    kind: object
+    domain: furniture_interior
+    attribute_profile: frame
+    supported_attributes:
+    - color
+    - material
+    - shape
+    capabilities:
+    - portable
+    - hangable
+    - leanable
+    count_unit: individual_object
+  mirror:
+    label:
+      ko: 거울
+      en: mirror
+    kind: object
+    domain: furniture_interior
+    attribute_profile: frame
+    supported_attributes:
+    - color
+    - material
+    - shape
+    capabilities:
+    - portable
+    - hangable
+    - leanable
+    review_tier: deferred
+    definition: 반사 개체의 수량 정책을 정한 뒤 활성화한다. 초기 독립 장면 sampler의 기본 후보에서 제외한다.
+    count_unit: individual_object
+  vase:
+    label:
+      ko: 꽃병
+      en: vase
+    kind: object
+    domain: furniture_interior
+    attribute_profile: vase
+    supported_attributes:
+    - color
+    - material
+    - texture
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  desk_lamp:
+    label:
+      ko: 탁상용 스탠드
+      en: desk lamp
+    kind: object
+    domain: furniture_interior
+    attribute_profile: lamp
+    supported_attributes:
+    - color
+    - state
+    capabilities:
+    - portable
+    count_unit: individual_object
+  coat_rack:
+    label:
+      ko: 옷걸이 스탠드
+      en: coat rack
+    kind: object
+    domain: furniture_interior
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - hanging_support
+    - leaning_support
+    count_unit: individual_object
+  cat:
+    label:
+      ko: 고양이
+      en: cat
+    kind: animal
+    domain: animals_pets
+    attribute_profile: fur_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  dog:
+    label:
+      ko: 개
+      en: dog
+    kind: animal
+    domain: animals_pets
+    attribute_profile: fur_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    aliases:
+      ko:
+      - 개
+      - 강아지
+      en:
+      - dog
+      - canine
+      - puppy
+    count_unit: individual_object
+  rabbit:
+    label:
+      ko: 토끼
+      en: rabbit
+    kind: animal
+    domain: animals_pets
+    attribute_profile: fur_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  bird:
+    label:
+      ko: 새
+      en: bird
+    kind: animal
+    domain: animals_pets
+    attribute_profile: bird
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    attribute_value_overrides:
+      pose:
+      - standing
+      - perching
+      - flying
+    definition: 종을 특정하지 않은 새. parrot/duck/chicken/owl과 같은 장면에서 중복 사용하지 않는다.
+    count_unit: individual_object
+  hamster:
+    label:
+      ko: 햄스터
+      en: hamster
+    kind: animal
+    domain: animals_pets
+    attribute_profile: fur_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  guinea_pig:
+    label:
+      ko: 기니피그
+      en: guinea pig
+    kind: animal
+    domain: animals_pets
+    attribute_profile: fur_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  turtle:
+    label:
+      ko: 거북
+      en: turtle
+    kind: animal
+    domain: animals_pets
+    attribute_profile: reptile
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  parrot:
+    label:
+      ko: 앵무새
+      en: parrot
+    kind: animal
+    domain: animals_pets
+    attribute_profile: bird
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    broader_category: bird
+    attribute_value_overrides:
+      pose:
+      - standing
+      - perching
+    count_unit: individual_object
+  horse:
+    label:
+      ko: 말
+      en: horse
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - rideable
+    - large_subject
+    count_unit: individual_object
+  cow:
+    label:
+      ko: 소
+      en: cow
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - large_subject
+    aliases:
+      ko:
+      - 소
+      en:
+      - cow
+      - cattle
+    count_unit: individual_object
+  sheep:
+    label:
+      ko: 양
+      en: sheep
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  goat:
+    label:
+      ko: 염소
+      en: goat
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    count_unit: individual_object
+  pig:
+    label:
+      ko: 돼지
+      en: pig
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    attribute_value_overrides:
+      color:
+      - pink
+      - black
+      - white
+      - brown
+    aliases:
+      ko:
+      - 돼지
+      en:
+      - pig
+      - hog
+      - swine
+    count_unit: individual_object
+  donkey:
+    label:
+      ko: 당나귀
+      en: donkey
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - rideable
+    - large_subject
+    count_unit: individual_object
+  deer:
+    label:
+      ko: 사슴
+      en: deer
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    attribute_value_overrides:
+      color:
+      - brown
+      - beige
+    count_unit: individual_object
+  fox:
+    label:
+      ko: 여우
+      en: fox
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: fur_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    attribute_value_overrides:
+      color:
+      - orange
+      - brown
+      - white
+      - gray
+    count_unit: individual_object
+  bear:
+    label:
+      ko: 곰
+      en: bear
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - large_subject
+    attribute_value_overrides:
+      color:
+      - brown
+      - black
+      - white
+    count_unit: individual_object
+  elephant:
+    label:
+      ko: 코끼리
+      en: elephant
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: large_animal
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - large_subject
+    attribute_value_overrides:
+      color:
+      - gray
+    background_candidates:
+    - forest
+    - meadow
+    count_unit: individual_object
+  giraffe:
+    label:
+      ko: 기린
+      en: giraffe
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: fixed_animal
+    supported_attributes:
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - large_subject
+    background_candidates:
+    - meadow
+    - pasture
+    count_unit: individual_object
+  zebra:
+    label:
+      ko: 얼룩말
+      en: zebra
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: fixed_animal
+    supported_attributes:
+    - pose
+    - facing
+    capabilities:
+    - animal
+    - large_subject
+    count_unit: individual_object
+  duck:
+    label:
+      ko: 오리
+      en: duck
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: bird
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    broader_category: bird
+    attribute_value_overrides:
+      pose:
+      - standing
+    count_unit: individual_object
+  chicken:
+    label:
+      ko: 닭
+      en: chicken
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: bird
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    broader_category: bird
+    attribute_value_overrides:
+      pose:
+      - standing
+    count_unit: individual_object
+  owl:
+    label:
+      ko: 올빼미
+      en: owl
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: bird
+    supported_attributes:
+    - color
+    - pose
+    - facing
+    capabilities:
+    - animal
+    broader_category: bird
+    attribute_value_overrides:
+      pose:
+      - standing
+      - perching
+    count_unit: individual_object
+  penguin:
+    label:
+      ko: 펭귄
+      en: penguin
+    kind: animal
+    domain: animals_farm_wild
+    attribute_profile: fixed_animal
+    supported_attributes:
+    - pose
+    - facing
+    capabilities:
+    - animal
+    attribute_value_overrides:
+      pose:
+      - standing
+      - lying
+    background_candidates:
+    - beach
+    - snow_field
+    count_unit: individual_object
+  sunflower:
+    label:
+      ko: 해바라기 한 송이
+      en: sunflower
+    kind: plant
+    domain: plants_garden
+    attribute_profile: flower
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    attribute_value_overrides:
+      color:
+      - yellow
+    count_unit: one_complete_flower_stem_not_petals
+    background_candidates:
+    - garden
+    - farm
+    - studio
+    - florist_shop
+  tulip:
+    label:
+      ko: 튤립 한 송이
+      en: tulip
+    kind: plant
+    domain: plants_garden
+    attribute_profile: flower
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    attribute_value_overrides:
+      color:
+      - red
+      - yellow
+      - white
+      - pink
+      - orange
+      - purple
+    count_unit: one_complete_flower_stem_not_petals
+  rose:
+    label:
+      ko: 장미 한 송이
+      en: rose
+    kind: plant
+    domain: plants_garden
+    attribute_profile: flower
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    attribute_value_overrides:
+      color:
+      - red
+      - yellow
+      - white
+      - pink
+      - orange
+    count_unit: one_complete_flower_stem_not_petals
+  cactus:
+    label:
+      ko: 선인장
+      en: cactus
+    kind: plant
+    domain: plants_garden
+    attribute_profile: plant
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    count_unit: individual_object
+  fern:
+    label:
+      ko: 양치식물
+      en: fern
+    kind: plant
+    domain: plants_garden
+    attribute_profile: plant
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    count_unit: individual_object
+  bonsai_tree:
+    label:
+      ko: 분재 나무
+      en: bonsai tree
+    kind: plant
+    domain: plants_garden
+    attribute_profile: plant
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    definition: 분재 나무 자체만 뜻한다. 용기와의 관계를 명시하면 flower_pot을 별도 entity로 추가한다.
+    count_unit: individual_object
+  pine_tree:
+    label:
+      ko: 소나무
+      en: pine tree
+    kind: plant
+    domain: plants_garden
+    attribute_profile: plant
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    - large_subject
+    background_candidates:
+    - forest
+    - garden
+    - park
+    - mountain_trail
+    count_unit: individual_object
+  palm_tree:
+    label:
+      ko: 야자수
+      en: palm tree
+    kind: plant
+    domain: plants_garden
+    attribute_profile: plant
+    supported_attributes:
+    - color
+    capabilities:
+    - plant
+    - large_subject
+    background_candidates:
+    - beach
+    - garden
+    - park
+    count_unit: individual_object
+  flower_pot:
+    label:
+      ko: 화분 용기
+      en: flower pot
+    kind: object
+    domain: plants_garden
+    attribute_profile: planter
+    supported_attributes:
+    - color
+    - material
+    - shape
+    capabilities:
+    - portable
+    - container
+    definition: 용기 자체만 뜻한다. 식물은 별도 entity로 표현하며 자동으로 추가하지 않는다.
+    count_unit: individual_object
+  watering_can:
+    label:
+      ko: 물뿌리개
+      en: watering can
+    kind: object
+    domain: plants_garden
+    attribute_profile: furniture
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - container
+    count_unit: individual_object
+  basketball:
+    label:
+      ko: 농구공
+      en: basketball
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: inflatable_ball
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - state
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      color:
+      - orange
+      - brown
+    broader_category: ball
+    count_unit: individual_object
+  soccer_ball:
+    label:
+      ko: 축구공
+      en: soccer ball
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: inflatable_ball
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    - state
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      color:
+      - black
+      - white
+      - yellow
+    broader_category: ball
+    count_unit: individual_object
+  tennis_ball:
+    label:
+      ko: 테니스공
+      en: tennis ball
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: ball
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      color:
+      - yellow
+      - green
+      material:
+      - rubber
+    broader_category: ball
+    count_unit: individual_object
+  tennis_racket:
+    label:
+      ko: 테니스 라켓
+      en: tennis racket
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: sports_equipment
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    count_unit: individual_object
+  skateboard:
+    label:
+      ko: 스케이트보드
+      en: skateboard
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: sports_equipment
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    - support_surface
+    count_unit: individual_object
+  roller_skate:
+    label:
+      ko: 롤러스케이트 한 짝
+      en: single roller skate
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: footwear
+    supported_attributes:
+    - color
+    - material
+    - pattern
+    capabilities:
+    - portable
+    - wearable
+    count_unit: individual_item_not_pair
+  ski:
+    label:
+      ko: 스키 한 개
+      en: single ski
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: sports_equipment
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    - leanable
+    count_unit: individual_item_not_pair
+  snowboard:
+    label:
+      ko: 스노보드
+      en: snowboard
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: sports_equipment
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    - leanable
+    count_unit: individual_object
+  baseball_bat:
+    label:
+      ko: 야구방망이
+      en: baseball bat
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: solid_shape
+    supported_attributes:
+    - color
+    - material
+    - finish
+    capabilities:
+    - portable
+    - leanable
+    attribute_value_overrides:
+      material:
+      - wood
+      - metal
+    count_unit: individual_object
+  dumbbell:
+    label:
+      ko: 덤벨
+      en: dumbbell
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: weight
+    supported_attributes:
+    - color
+    - material
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      material:
+      - metal
+      - rubber
+    count_unit: individual_object
+  tent:
+    label:
+      ko: 텐트
+      en: tent
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: folding_equipment
+    supported_attributes:
+    - color
+    - material
+    - state
+    capabilities: []
+    definition: 텐트 자체의 펼침/접힘을 표현한다. 내부 물체 포함 관계는 초기 train 사전에서 지원하지 않는다.
+    count_unit: individual_object
+  sleeping_bag:
+    label:
+      ko: 침낭
+      en: sleeping bag
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: folding_equipment
+    supported_attributes:
+    - color
+    - material
+    - state
+    capabilities:
+    - portable
+    count_unit: individual_object
+  surfboard:
+    label:
+      ko: 서핑보드
+      en: surfboard
+    kind: object
+    domain: sports_outdoors
+    attribute_profile: sports_equipment
+    supported_attributes:
+    - color
+    - orientation
+    capabilities:
+    - portable
+    - leanable
+    count_unit: individual_object
+  bicycle:
+    label:
+      ko: 자전거
+      en: bicycle
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - rideable
+    - pushable
+    aliases:
+      ko:
+      - 자전거
+      en:
+      - bicycle
+      - bike
+    count_unit: individual_object
+  motorcycle:
+    label:
+      ko: 오토바이
+      en: motorcycle
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - rideable
+    background_candidates: [street, parking_lot, garage, courtyard, farm]
+    count_unit: individual_object
+  scooter:
+    label:
+      ko: 킥스쿠터
+      en: kick scooter
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - pushable
+    count_unit: individual_object
+  car:
+    label:
+      ko: 승용차
+      en: car
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates: [street, parking_lot, garage, farm]
+    count_unit: individual_object
+  bus:
+    label:
+      ko: 버스
+      en: bus
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates: [street, parking_lot, airport_apron]
+    count_unit: individual_object
+  truck:
+    label:
+      ko: 트럭
+      en: truck
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates: [street, parking_lot, garage, farm, harbor, airport_apron]
+    count_unit: individual_object
+  train:
+    label:
+      ko: 기차
+      en: train
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates:
+    - train_platform
+    count_unit: individual_object
+  boat:
+    label:
+      ko: 소형 배
+      en: small boat
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates:
+    - harbor
+    - riverside
+    - lakeside
+    - beach
+    count_unit: individual_object
+  airplane:
+    label:
+      ko: 비행기
+      en: airplane
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates:
+    - airport_apron
+    count_unit: individual_object
+  helicopter:
+    label:
+      ko: 헬리콥터
+      en: helicopter
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - large_subject
+    background_candidates: [airport_apron]
+    count_unit: individual_object
+  wheelbarrow:
+    label:
+      ko: 외바퀴 수레
+      en: wheelbarrow
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - container
+    - pushable
+    background_candidates: [garden, greenhouse, garage, farm, patio, workshop]
+    count_unit: individual_object
+  shopping_cart:
+    label:
+      ko: 쇼핑 카트
+      en: shopping cart
+    kind: object
+    domain: vehicles_transport
+    attribute_profile: vehicle
+    supported_attributes:
+    - color
+    - facing
+    capabilities:
+    - vehicle
+    - container
+    - pushable
+    background_candidates: [grocery_store, parking_lot]
+    count_unit: individual_object
+  person:
+    label:
+      ko: 사람
+      en: person
+    kind: human
+    domain: people_daily
+    attribute_profile: human
+    supported_attributes:
+    - pose
+    capabilities:
+    - human
+    count_unit: individual_object
+  smartphone:
+    label:
+      ko: 스마트폰
+      en: smartphone
+    kind: object
+    domain: people_daily
+    attribute_profile: device
+    supported_attributes:
+    - color
+    - finish
+    capabilities:
+    - portable
+    aliases:
+      ko:
+      - 스마트폰
+      - 휴대폰
+      en:
+      - smartphone
+      - mobile phone
+      - cellphone
+    count_unit: individual_object
+  laptop:
+    label:
+      ko: 노트북 컴퓨터
+      en: laptop computer
+    kind: object
+    domain: people_daily
+    attribute_profile: laptop
+    supported_attributes:
+    - color
+    - state
+    capabilities:
+    - portable
+    - openable
+    count_unit: individual_object
+  camera:
+    label:
+      ko: 카메라
+      en: camera
+    kind: object
+    domain: people_daily
+    attribute_profile: device
+    supported_attributes:
+    - color
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  headphones:
+    label:
+      ko: 헤드폰 한 개
+      en: pair of headphones
+    kind: object
+    domain: people_daily
+    attribute_profile: device
+    supported_attributes:
+    - color
+    - finish
+    capabilities:
+    - portable
+    - wearable
+    count_unit: one_complete_object_not_components
+  tablet:
+    label:
+      ko: 태블릿 기기
+      en: tablet device
+    kind: object
+    domain: people_daily
+    attribute_profile: device
+    supported_attributes:
+    - color
+    - finish
+    capabilities:
+    - portable
+    count_unit: individual_object
+  acoustic_guitar:
+    label:
+      ko: 통기타
+      en: acoustic guitar
+    kind: object
+    domain: people_daily
+    attribute_profile: instrument
+    supported_attributes:
+    - color
+    - material
+    capabilities:
+    - portable
+    - instrument
+    background_candidates:
+    - music_room
+    - studio
+    - living_room
+    - park
+    - classroom
+    count_unit: individual_object
+  violin:
+    label:
+      ko: 바이올린
+      en: violin
+    kind: object
+    domain: people_daily
+    attribute_profile: instrument
+    supported_attributes:
+    - color
+    - material
+    capabilities:
+    - portable
+    - instrument
+    background_candidates:
+    - music_room
+    - studio
+    - living_room
+    - classroom
+    count_unit: individual_object
+  violin_bow:
+    label:
+      ko: 바이올린 활
+      en: violin bow
+    kind: object
+    domain: people_daily
+    attribute_profile: instrument
+    supported_attributes:
+    - color
+    - material
+    capabilities:
+    - portable
+    attribute_value_overrides:
+      material:
+      - wood
+      color:
+      - brown
+      - black
+      - white
+    count_unit: individual_object
+relations:
+  left_of:
+    label:
+      ko: 왼쪽에 있다
+      en: to the left of
+    kind: spatial
+    arity: 2
+    definition: 관찰자 기준 주체의 가시 영역이 대상의 가시 영역보다 완전히 왼쪽에 있다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: core
+    inverse: right_of
+    reference_frame: viewer
+  right_of:
+    label:
+      ko: 오른쪽에 있다
+      en: to the right of
+    kind: spatial
+    arity: 2
+    definition: 관찰자 기준 주체의 가시 영역이 대상의 가시 영역보다 완전히 오른쪽에 있다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: core
+    inverse: left_of
+    reference_frame: viewer
+  'on':
+    label:
+      ko: 표면에 놓여 있다
+      en: resting on
+    kind: spatial
+    arity: 2
+    definition: 대상의 윗면과 접촉하고 지지된다. 사람은 가구에 앉거나 보드에 선 자세도 가능하나 단순 화면 위쪽과 구별한다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        capabilities_any:
+        - support_surface
+    default_scope: all_pairs
+    review_tier: core
+  inside:
+    label:
+      ko: 안에 있다
+      en: inside
+    kind: spatial
+    arity: 2
+    definition: 용기의 내부에 있고 물체의 수·속성·포함 관계가 보인다. 열린 용기 또는 투명 용기가 필요하다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        capabilities_any:
+        - container
+    default_scope: all_pairs
+    review_tier: core
+    requirements:
+    - visible_contents
+    - compatible_container_size
+  under:
+    label:
+      ko: 아래에 들어가 있다
+      en: under
+    kind: spatial
+    arity: 2
+    definition: 대상의 바닥 아래 공간에 주체가 있으며 가시 영역이 수평으로 일부 겹친다. 윗면 지지와 다르다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        categories:
+        - table
+        - desk
+        - chair
+        - bench
+        - shelf
+    default_scope: all_pairs
+    review_tier: review_required
+  above:
+    label:
+      ko: 화면상 위쪽에 있다
+      en: above
+    kind: spatial
+    arity: 2
+    definition: 관찰자 기준 화면의 세로 방향 관계. 표면 접촉·지지나 중력 방향을 자동으로 함의하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: core
+    inverse: below
+    reference_frame: viewer
+  below:
+    label:
+      ko: 화면상 아래쪽에 있다
+      en: below
+    kind: spatial
+    arity: 2
+    definition: 관찰자 기준 화면의 세로 방향 관계. 표면 접촉·지지나 중력 방향을 자동으로 함의하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: core
+    inverse: above
+    reference_frame: viewer
+  in_front_of:
+    label:
+      ko: 앞에 있다
+      en: in front of
+    kind: spatial
+    arity: 2
+    definition: 관찰자에서 더 가깝거나 먼 깊이 관계. 화면 위아래와 구별하며 핵심 개체의 판별을 가리지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    inverse: behind
+    reference_frame: viewer
+    requirements:
+    - depth_cues_visible
+    - all_arguments_visible
+  behind:
+    label:
+      ko: 뒤에 있다
+      en: behind
+    kind: spatial
+    arity: 2
+    definition: 관찰자에서 더 가깝거나 먼 깊이 관계. 화면 위아래와 구별하며 핵심 개체의 판별을 가리지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    inverse: in_front_of
+    reference_frame: viewer
+    requirements:
+    - depth_cues_visible
+    - all_arguments_visible
+  next_to:
+    label:
+      ko: 바로 옆에 있다
+      en: next to
+    kind: spatial
+    arity: 2
+    definition: 서로 떨어져 바로 옆에 있으며 지정한 다른 개체가 사이에 없다. 이 두 개체 사이에 포함, 지지, 들기, 착용, 탑승을 함께 부여하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: core
+    symmetric: true
+  touching:
+    label:
+      ko: 서로 닿아 있다
+      en: touching
+    kind: spatial
+    arity: 2
+    definition: 두 개체의 표면 접촉이 보인다. 단순한 근접과 구별한다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    symmetric: true
+  leaning_against:
+    label:
+      ko: 기대어 있다
+      en: leaning against
+    kind: spatial
+    arity: 2
+    definition: 주체가 기울어진 채 대상에 접촉해 지지된다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - leanable
+      object:
+        capabilities_any:
+        - leaning_support
+    default_scope: all_pairs
+    review_tier: review_required
+  hanging_from:
+    label:
+      ko: 매달려 있다
+      en: hanging from
+    kind: spatial
+    arity: 2
+    definition: 주체가 대상으로부터 매달려 지지되며 연결부가 보인다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - hangable
+      object:
+        capabilities_any:
+        - hanging_support
+    default_scope: all_pairs
+    review_tier: review_required
+  larger_than:
+    label:
+      ko: 더 크게 보인다
+      en: visibly larger than
+    kind: comparative
+    arity: 2
+    definition: 두 단일 개체의 가시 크기/높이를 비교한다. 공통 깊이 평면을 사용하고 실제 cm나 종의 평균 크기를 추정하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    inverse: smaller_than
+    requirements:
+    - singleton_arguments
+    - common_depth_plane
+  smaller_than:
+    label:
+      ko: 더 작게 보인다
+      en: visibly smaller than
+    kind: comparative
+    arity: 2
+    definition: 두 단일 개체의 가시 크기/높이를 비교한다. 공통 깊이 평면을 사용하고 실제 cm나 종의 평균 크기를 추정하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    inverse: larger_than
+    requirements:
+    - singleton_arguments
+    - common_depth_plane
+  taller_than:
+    label:
+      ko: 더 높게 보인다
+      en: visibly taller than
+    kind: comparative
+    arity: 2
+    definition: 두 단일 개체의 가시 크기/높이를 비교한다. 공통 깊이 평면을 사용하고 실제 cm나 종의 평균 크기를 추정하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    inverse: shorter_than
+    requirements:
+    - singleton_arguments
+    - common_depth_plane
+  shorter_than:
+    label:
+      ko: 더 낮게 보인다
+      en: visibly shorter than
+    kind: comparative
+    arity: 2
+    definition: 두 단일 개체의 가시 크기/높이를 비교한다. 공통 깊이 평면을 사용하고 실제 cm나 종의 평균 크기를 추정하지 않는다.
+    role_selectors:
+      subject:
+        any_entity: true
+      object:
+        any_entity: true
+    default_scope: all_pairs
+    review_tier: review_required
+    inverse: taller_than
+    requirements:
+    - singleton_arguments
+    - common_depth_plane
+  holding:
+    label:
+      ko: 손에 들고 있다
+      en: holding
+    kind: action
+    arity: 2
+    definition: 사람이 손으로 대상 물체를 잡아 들고 있다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - portable
+    default_scope: all_pairs
+    review_tier: core
+    requirements:
+    - singleton_arguments
+    - hands_and_object_visible
+  wearing:
+    label:
+      ko: 착용하고 있다
+      en: wearing
+    kind: action
+    arity: 2
+    definition: 사람이 물품을 몸에 착용하고 있다. 손에 들고 있는 상태와 구별한다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - wearable_core
+    default_scope: all_pairs
+    review_tier: core
+    requirements:
+    - singleton_arguments
+    - worn_item_visible
+  riding:
+    label:
+      ko: 올라앉아 타고 있다
+      en: riding
+    kind: action
+    arity: 2
+    definition: 사람이 탈것 또는 탑승 가능한 동물 위에 앉은 탑승 자세다. 옆에 서 있거나 교통수단 내부에 가려진 승객은 제외한다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - rideable
+    default_scope: all_pairs
+    review_tier: core
+    requirements:
+    - singleton_arguments
+    - subject_sitting
+    - rider_and_mount_visible
+  pushing:
+    label:
+      ko: 미는 자세다
+      en: in a pushing posture with
+    kind: action
+    arity: 2
+    definition: 사람이 대상 손잡이에 손을 대고 미는 자세를 보인다. 실제 이동 속도를 판단하지 않는다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - pushable
+    default_scope: all_pairs
+    review_tier: review_required
+    requirements:
+    - singleton_arguments
+    - hands_and_handle_visible
+  pulling:
+    label:
+      ko: 당기는 자세다
+      en: in a pulling posture with
+    kind: action
+    arity: 2
+    definition: 사람이 대상 손잡이를 잡아 당기는 자세를 보인다. 미는 자세와 구별 가능해야 한다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - pullable
+    default_scope: all_pairs
+    review_tier: review_required
+    requirements:
+    - singleton_arguments
+    - hands_and_handle_visible
+  reading:
+    label:
+      ko: 펼친 책을 읽는 자세다
+      en: reading
+    kind: action
+    arity: 2
+    definition: 사람이 펼친 책·노트를 바라보는 독서 자세다. 글자 내용은 지정하지 않는다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - readable
+    default_scope: all_pairs
+    review_tier: review_required
+    requirements:
+    - singleton_arguments
+    - object_open
+    - gaze_and_book_visible
+  hugging:
+    label:
+      ko: 팔로 감싸 안고 있다
+      en: hugging
+    kind: action
+    arity: 2
+    definition: 사람이 다른 사람 또는 동물을 팔로 감싸 안은 정지 자세다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - human
+        - animal
+    default_scope: all_pairs
+    review_tier: review_required
+    requirements:
+    - singleton_arguments
+    - contact_visible
+  playing:
+    label:
+      ko: 악기를 연주하는 자세다
+      en: playing
+    kind: action
+    arity: 2
+    definition: 사람이 악기별 연주 자세를 보인다. 소리가 난다고 판단하지 않는다.
+    role_selectors:
+      subject:
+        capabilities_any:
+        - human
+      object:
+        capabilities_any:
+        - instrument
+    default_scope: all_pairs
+    review_tier: review_required
+    requirements:
+    - singleton_arguments
+    - instrument_specific_pose
+  between:
+    label:
+      ko: 두 개체 사이에 있다
+      en: between
+    kind: spatial
+    arity: 3
+    definition: 관찰자 기준 가로 순서가 reference_a–subject–reference_b 또는 그 역순이다. 세 역할은 서로
+      다른 단일 entity ID를 참조한다.
+    role_selectors:
+      subject:
+        any_entity: true
+      reference_a:
+        any_entity: true
+      reference_b:
+        any_entity: true
+    scope: singleton_roles
+    reference_frame: viewer
+    requirements:
+    - singleton_arguments
+    - distinct_role_ids
+    review_tier: review_required
+    scene_encoding: 'roles: {subject: entity_id, reference_a: entity_id, reference_b:
+      entity_id}; binary object 필드로 압축하지 않는다.'
+backgrounds:
+  studio:
+    label:
+      ko: 무지 배경 스튜디오
+      en: studio with a plain backdrop
+    setting: indoor
+  kitchen:
+    label:
+      ko: 주방
+      en: kitchen
+    setting: indoor
+  living_room:
+    label:
+      ko: 거실
+      en: living room
+    setting: indoor
+  dining_room:
+    label:
+      ko: 식당 방
+      en: dining room
+    setting: indoor
+  bedroom:
+    label:
+      ko: 침실
+      en: bedroom
+    setting: indoor
+  bathroom:
+    label:
+      ko: 욕실
+      en: bathroom
+    setting: indoor
+  home_office:
+    label:
+      ko: 가정용 작업실
+      en: home office
+    setting: indoor
+  workshop:
+    label:
+      ko: 작업장
+      en: workshop
+    setting: indoor
+  garage:
+    label:
+      ko: 차고
+      en: garage
+    setting: indoor
+  art_studio:
+    label:
+      ko: 미술 작업실
+      en: art studio
+    setting: indoor
+  classroom:
+    label:
+      ko: 교실
+      en: classroom
+    setting: indoor
+  library:
+    label:
+      ko: 도서관
+      en: library
+    setting: indoor
+  office:
+    label:
+      ko: 사무실
+      en: office
+    setting: indoor
+  laboratory:
+    label:
+      ko: 실험실
+      en: laboratory
+    setting: indoor
+  cafe:
+    label:
+      ko: 카페
+      en: cafe
+    setting: indoor
+  bakery:
+    label:
+      ko: 빵집
+      en: bakery
+    setting: indoor
+  grocery_store:
+    label:
+      ko: 식료품점
+      en: grocery store
+    setting: indoor
+  florist_shop:
+    label:
+      ko: 꽃집
+      en: florist shop
+    setting: indoor
+  clothing_store:
+    label:
+      ko: 의류 매장
+      en: clothing store
+    setting: indoor
+  sports_hall:
+    label:
+      ko: 실내 체육관
+      en: indoor sports hall
+    setting: indoor
+  greenhouse:
+    label:
+      ko: 온실
+      en: greenhouse
+    setting: indoor
+  music_room:
+    label:
+      ko: 음악 연습실
+      en: music room
+    setting: indoor
+  train_station_hall:
+    label:
+      ko: 기차역 실내 대합실
+      en: train station hall
+    setting: indoor
+  park:
+    label:
+      ko: 공원
+      en: park
+    setting: outdoor
+  garden:
+    label:
+      ko: 정원
+      en: garden
+    setting: outdoor
+  beach:
+    label:
+      ko: 해변
+      en: beach
+    setting: outdoor
+  forest:
+    label:
+      ko: 숲
+      en: forest
+    setting: outdoor
+  meadow:
+    label:
+      ko: 초원
+      en: meadow
+    setting: outdoor
+  farm:
+    label:
+      ko: 농장
+      en: farm
+    setting: outdoor
+  pasture:
+    label:
+      ko: 목초지
+      en: pasture
+    setting: outdoor
+  orchard:
+    label:
+      ko: 과수원
+      en: orchard
+    setting: outdoor
+  playground:
+    label:
+      ko: 놀이터
+      en: playground
+    setting: outdoor
+  schoolyard:
+    label:
+      ko: 학교 운동장
+      en: schoolyard
+    setting: outdoor
+  courtyard:
+    label:
+      ko: 안뜰
+      en: courtyard
+    setting: outdoor
+  patio:
+    label:
+      ko: 야외 테라스
+      en: patio
+    setting: outdoor
+  balcony:
+    label:
+      ko: 발코니
+      en: balcony
+    setting: outdoor
+  campsite:
+    label:
+      ko: 야영장
+      en: campsite
+    setting: outdoor
+  riverside:
+    label:
+      ko: 강가
+      en: riverside
+    setting: outdoor
+  lakeside:
+    label:
+      ko: 호숫가
+      en: lakeside
+    setting: outdoor
+  harbor:
+    label:
+      ko: 항구
+      en: harbor
+    setting: outdoor
+  street:
+    label:
+      ko: 거리
+      en: street
+    setting: outdoor
+  sidewalk:
+    label:
+      ko: 보도
+      en: sidewalk
+    setting: outdoor
+  town_square:
+    label:
+      ko: 마을 광장
+      en: town square
+    setting: outdoor
+  parking_lot:
+    label:
+      ko: 주차장
+      en: parking lot
+    setting: outdoor
+  train_platform:
+    label:
+      ko: 기차역 승강장
+      en: train platform
+    setting: outdoor
+  sports_field:
+    label:
+      ko: 야외 운동장
+      en: outdoor sports field
+    setting: outdoor
+  snow_field:
+    label:
+      ko: 눈 덮인 들판
+      en: snow-covered field
+    setting: outdoor
+  desert:
+    label:
+      ko: 사막
+      en: desert
+    setting: outdoor
+  mountain_trail:
+    label:
+      ko: 산길
+      en: mountain trail
+    setting: outdoor
+  airport_apron:
+    label:
+      ko: 공항 계류장
+      en: airport apron
+    setting: outdoor
+time_of_day:
+  day:
+    ko: 낮
+    en: daytime
+  night:
+    ko: 밤
+    en: nighttime
+  dawn:
+    ko: 새벽
+    en: dawn
+  morning:
+    ko: 아침
+    en: morning
+  noon:
+    ko: 한낮
+    en: noon
+  afternoon:
+    ko: 오후
+    en: afternoon
+  sunset:
+    ko: 해 질 무렵
+    en: sunset
+weather:
+  clear:
+    ko: 맑음
+    en: clear weather
+  overcast:
+    ko: 흐림
+    en: overcast weather
+  rain:
+    ko: 비
+    en: rain
+  snow:
+    ko: 눈이 내리는 날씨
+    en: snowfall
+  fog:
+    ko: 안개 낀 날씨
+    en: foggy weather
+styles:
+  photograph:
+    ko: 사진
+    en: photograph
+  watercolor:
+    ko: 수채화
+    en: watercolor painting
+  flat_illustration:
+    ko: 평면 일러스트
+    en: flat illustration
+  render_3d:
+    ko: 3D 렌더
+    en: 3D render
+  pencil_sketch:
+    ko: 연필 스케치
+    en: pencil sketch
+  ink_drawing:
+    ko: 잉크 선화
+    en: ink drawing
+  colored_pencil:
+    ko: 색연필화
+    en: colored-pencil drawing
+  gouache:
+    ko: 과슈화
+    en: gouache painting
+  oil_painting:
+    ko: 유화
+    en: oil painting
+  paper_cut:
+    ko: 종이 오리기 콜라주
+    en: paper-cut collage
+  clay_render:
+    ko: 점토 모형풍 3D
+    en: clay-style 3D render
+  low_poly_3d:
+    ko: 로우 폴리 3D
+    en: low-poly 3D render
+style_groups:
+  color_readable:
+  - photograph
+  - watercolor
+  - flat_illustration
+  - render_3d
+  - colored_pencil
+  - gouache
+  - oil_painting
+  - paper_cut
+  - clay_render
+  - low_poly_3d
+  monochrome:
+  - pencil_sketch
+  - ink_drawing
+  material_readable_core:
+  - photograph
+  - render_3d
+  fine_surface_review:
+  - photograph
+  - render_3d
+  - colored_pencil
+  - oil_painting
+viewpoints:
+  front:
+    ko: 정면 시점
+    en: front view
+  overhead:
+    ko: 수직으로 내려다본 시점
+    en: overhead view
+  oblique:
+    ko: 비스듬한 시점
+    en: oblique view
+  side:
+    ko: 측면 시점
+    en: side view
+  rear:
+    ko: 뒤쪽 시점
+    en: rear view
+framing:
+  all_target_objects_fully_visible:
+    ko: 모든 지정 개체가 화면 안에 완전히 보임
+    en: all specified entities fully visible within the frame
+lighting:
+  soft_diffuse:
+    ko: 부드러운 확산광
+    en: soft diffuse lighting
+  direct_sunlight:
+    ko: 직사광
+    en: direct sunlight
+  low_light:
+    ko: 어두운 조명
+    en: low lighting
+  side_light:
+    ko: 옆에서 비추는 조명
+    en: side lighting
+  backlight:
+    ko: 뒤에서 비추는 조명
+    en: backlighting
+  warm_indoor:
+    ko: 따뜻한 실내 조명
+    en: warm indoor lighting
+active:
+  attributes:
+  - color
+  - material
+  - pose
+  - state
+  - pattern
+  - shape
+  relations:
+  - left_of
+  - right_of
+  - above
+  - below
+  - 'on'
+  - inside
+  - next_to
+  - holding
+  - wearing
+  - riding
+  disabled_values:
+    pose:
+    - perching
+    - flying
+    state:
+    - deflated
+  lighting:
+  - soft_diffuse
+  viewpoints:
+  - front
+  - oblique
+  - overhead
+  - side
+constraints:
+  ridden_animal_pose: standing
+  riding_backgrounds: [farm, pasture, meadow, park, street, courtyard, schoolyard, sports_field, parking_lot]
+  unsuitable_soft_supports:
+    subjects_in_domains: [tools, tableware, produce, food]
+    supports: [bed, sofa, armchair]
+  additional_contexts:
+  - categories: [suitcase, backpack, hat, scarf, umbrella, camera, smartphone, headphones, book, bottle, sunglasses, handbag]
+    locations: [train_platform, airport_apron, harbor, street, parking_lot]
+  - categories: [box, tray, food_container, bench, table, stool]
+    locations: [workshop, garage, garden, park, farm, patio]
+  - categories: [basketball, soccer_ball, helmet, bicycle, scooter, skateboard, roller_skate, sneaker, tennis_racket, tennis_ball]
+    locations: [park, playground, sports_hall, sports_field, schoolyard]
+  - categories: [gardening_trowel, rake, shovel, watering_can, wheelbarrow, boot, glove]
+    locations: [farm, orchard, pasture, meadow, garden, greenhouse]
+  - categories: [apple, carrot, pumpkin, corn_cob, egg, hat, stool, bench, box, boot]
+    locations: [farm, orchard, pasture]
+  - categories: [sunglasses, hat, surfboard, umbrella, camera, backpack, tent, sleeping_bag]
+    locations: [beach, lakeside, riverside, campsite]
+  action_count: 1
+  large_subject_max_count: 2
+  container_count: 1
+  inside_viewpoint: overhead
+  inside_targets:
+  - box
+  - bowl
+  - food_container
+  - flower_pot
+  - mug
+  - suitcase
+  - cabinet
+  small_contents:
+  - apple
+  - orange
+  - lemon
+  - strawberry
+  - egg
+  - eraser
+  - ball
+  - cube
+  - cylinder
+  - tennis_ball
+  - pencil
+  - pen
+  - cookie
+  - cupcake
+  - tomato
+  mug_contents:
+  - eraser
+  - strawberry
+  - pencil
+  - pen
+  max_attributes_per_entity: 3
+  require_different_attributes_for_same_category: true
+  animal_backgrounds:
+    farm:
+    - horse
+    - cow
+    - sheep
+    - goat
+    - pig
+    - donkey
+    - duck
+    - chicken
+    forest:
+    - deer
+    - fox
+    - bear
+    - elephant
+    - owl
+    - bird
+    - parrot
+    meadow:
+    - horse
+    - cow
+    - sheep
+    - goat
+    - pig
+    - donkey
+    - deer
+    - fox
+    - bear
+    - elephant
+    - giraffe
+    - zebra
+    - bird
+    pasture:
+    - horse
+    - cow
+    - sheep
+    - goat
+    - pig
+    - donkey
+    - giraffe
+    - zebra
+    beach:
+    - penguin
+    - bird
+    snow_field:
+    - penguin
+    garden:
+    - cat
+    - dog
+    - rabbit
+    - bird
+    - hamster
+    - guinea_pig
+    - turtle
+    - parrot
+    - duck
+    - chicken
+    - owl
+    park:
+    - cat
+    - dog
+    - rabbit
+    - bird
+    - hamster
+    - guinea_pig
+    - turtle
+    - parrot
+    - duck
+    - chicken
+    - owl
+    living_room:
+    - cat
+    - dog
+    - rabbit
+    - hamster
+    - guinea_pig
+    - turtle
+    studio:
+    - cat
+    - dog
+    - rabbit
+    - bird
+    - hamster
+    - guinea_pig
+    - turtle
+    - parrot
+    - owl
+  human_supports:
+  - chair
+  - stool
+  - bench
+  - sofa
+  - armchair
+  - bed
+  - skateboard
+  animal_support_subjects:
+  - cat
+  - dog
+  - rabbit
+  - hamster
+  - guinea_pig
+  - bird
+  - parrot
+  - owl
+  - turtle
+  animal_supports:
+  - table
+  - desk
+  - chair
+  - stool
+  - bench
+  - sofa
+  - armchair
+  - shelf
+  - bed
+  small_supports:
+  - plate
+  - tray
+  small_support_subjects:
+  - apple
+  - ball
+  - banana
+  - book
+  - bowl
+  - bread_roll
+  - carrot
+  - cookie
+  - cube
+  - cupcake
+  - cylinder
+  - donut
+  - egg
+  - eraser
+  - fork
+  - grape
+  - knife
+  - lemon
+  - mug
+  - notebook
+  - orange
+  - peach
+  - pear
+  - pen
+  - pencil
+  - plate
+  - potato
+  - scissors
+  - spoon
+  - strawberry
+  - tennis_ball
+  - tomato
+  vehicle_backgrounds:
+  - street
+  - parking_lot
+  - sidewalk
+  - train_platform
+  - harbor
+  - airport_apron
+  - garage
+  - studio
+  - park
+  - sports_field
+  - campsite
+  - farm
+  - courtyard
+context_profiles:
+  tableware:
+    background_candidates:
+    - studio
+    - kitchen
+    - dining_room
+    - cafe
+    - patio
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  food:
+    background_candidates:
+    - studio
+    - kitchen
+    - dining_room
+    - bakery
+    - cafe
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  produce:
+    background_candidates:
+    - studio
+    - kitchen
+    - grocery_store
+    - garden
+    - orchard
+    - farm
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  tools:
+    background_candidates:
+    - studio
+    - workshop
+    - garage
+    - garden
+    - art_studio
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  stationery:
+    background_candidates:
+    - studio
+    - home_office
+    - office
+    - classroom
+    - library
+    - art_studio
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  toys_shapes:
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - classroom
+    - playground
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  clothing_accessories:
+    background_candidates:
+    - studio
+    - bedroom
+    - clothing_store
+    - living_room
+    - park
+    - street
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  furniture_interior:
+    background_candidates:
+    - studio
+    - living_room
+    - bedroom
+    - dining_room
+    - home_office
+    - office
+    - patio
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  animals_pets:
+    background_candidates:
+    - studio
+    - living_room
+    - garden
+    - park
+    - meadow
+    - courtyard
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  animals_farm_wild:
+    background_candidates:
+    - farm
+    - pasture
+    - meadow
+    - forest
+    - beach
+    - snow_field
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  plants_garden:
+    background_candidates:
+    - garden
+    - greenhouse
+    - florist_shop
+    - park
+    - forest
+    - patio
+    - balcony
+    - studio
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  sports_outdoors:
+    background_candidates:
+    - studio
+    - sports_hall
+    - sports_field
+    - park
+    - campsite
+    - beach
+    - snow_field
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  vehicles_transport:
+    background_candidates:
+    - street
+    - parking_lot
+    - sidewalk
+    - train_platform
+    - harbor
+    - airport_apron
+    - garage
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.
+  people_daily:
+    background_candidates:
+    - studio
+    - living_room
+    - home_office
+    - office
+    - classroom
+    - library
+    - music_room
+    - park
+    - garden
+    meaning: 주제별 기본 후보. 개체·행동별 추가 제약을 함께 적용한다.

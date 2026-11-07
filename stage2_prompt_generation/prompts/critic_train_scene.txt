@@ -1,0 +1,16 @@
+Check whether a generated English image prompt faithfully expresses the source scene.
+Return ONLY JSON {"issues": [short concrete issue strings]}. An empty issues array
+means all source facts are explicitly expressed without added visual constraints.
+
+Check each category, total count, color/material/pattern/shape binding, pose/state,
+relation direction, group scope, location, medium, camera viewpoint, time, weather,
+lighting and framing. Do not fill gaps with common knowledge or intention.
+For all_pairs relations, the text must locate ALL members of both groups, not only
+one animal with others nearby. Flag conflicting relations even if the correct one
+also appears. Visibility of only two props is insufficient when a table is named.
+Camera direction and lighting direction are distinct. All named objects must be in
+the frame; natural object contact in holding/wearing/riding is not a contradiction.
+Flag extra props, unrequested poses or facing directions, terrain/surfaces, sunlight,
+absolute frame placement, blanket absence constraints and meta commentary.
+Do not flag normal synonyms, reversed equivalent relation descriptions, ordinary
+connective prose, intrinsic category parts or the stated medium's conventional look.

@@ -1,0 +1,4 @@
+# Use a dedicated Python 3.12 Linux/NVIDIA CUDA environment for stage2.
+# These versions match the legacy text server and YAML loader.
+vllm==0.33.0
+PyYAML==6.0.3

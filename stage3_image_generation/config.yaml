@@ -1,0 +1,34 @@
+input_dir: outputs_stage2
+prompt_files:
+  train: train_prompts_v2.jsonl
+  test: test_prompts_v2.jsonl
+output_dir: outputs_stage3
+model:
+  id: Qwen/Qwen-Image-2512
+  revision: 25468b98e3276ca6700de15c6628e51b7de54a26
+  dtype: bfloat16
+  lora:
+    repo_id: lightx2v/Qwen-Image-2512-Lightning
+    revision: 4609161e308ce82018a42c2a0c9b107e865bb751
+    filename: Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors
+    backend: distill
+    scale: 1.0
+server:
+  host: 127.0.0.1
+  port: 8091
+  max_num_seqs: 4
+  step_execution: true
+  attention_backend: CUDNN_ATTN
+  vae_slicing: true
+  enforce_eager: false
+generation:
+  width: 768
+  height: 768
+  num_inference_steps: 8
+  true_cfg_scale: 1.0
+  negative_prompt: ""
+  base_seed: 20261103
+client:
+  concurrency: 4
+  timeout_seconds: 1800
+  max_attempts: 2

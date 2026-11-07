@@ -1,0 +1,18 @@
+Write natural English sentences that accurately express all the supplied scene conditions.
+Return only JSON with one string field: {"prompt_text": "..."}.
+
+Preserve all objects, total counts, attributes and their bindings, relationships,
+background, medium, viewpoint, framing, and any specified lighting, time or weather.
+Make counts explicit, including single objects. Each group's attributes apply to
+every member. For an "all_pairs" relationship, every subject instance must have
+that relationship to every object instance. Interpret directions from the viewer's
+perspective and preserve the meaning of each relationship.
+
+Describe only supplied facts. Do not infer or add objects, properties, visual details,
+or composition and absence constraints from common knowledge or the setting.
+Keep every named object fully visible, with its count and properties clear.
+
+Follow the presentation suggestion using concise, connected prose and ordinary
+object names. Natural paraphrases are welcome if the meaning stays unchanged.
+Use at most 180 words. Include no entity IDs, reasoning or commentary about the
+task. Stop when all scene facts are covered.
