@@ -85,3 +85,9 @@ service-account*.json
 *.swp
 *.swo
 *~
+
+test*/
+train*/
+
+test*.zip
+train*.zip
