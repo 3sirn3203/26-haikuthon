@@ -34,7 +34,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(CHAN / 'src'))
 
 from haiku_bl import data as D  # noqa: E402
-from haiku_bl.profiling import pick_device  # noqa: E402
+from haiku_bl.profiling import Profiler, pick_device  # noqa: E402
 
 
 class Pairs(Dataset):
@@ -172,6 +172,7 @@ def main():
                                                 pct_start=0.1, anneal_strategy='cos')
     dtype = torch.bfloat16 if device.type in ('cuda', 'mps') else torch.float32
     model.train()
+    prof = Profiler(device)                    # peak training memory (CUDA: max allocated; MPS: sampled)
     step, t0, log = 0, time.time(), []
     for ep in range(ft['epochs']):
         bl = batches(rows, ft['batch_size'], ft.get('batching', 'random'), rng)
@@ -185,8 +186,10 @@ def main():
             loss.backward()
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             opt.step(); sched.step(); step += 1
+            prof.sample()
             if step % 10 == 0 or step == 1:
-                print(f'ep {ep} step {step}/{total} loss {loss.item():.4f} {time.time()-t0:.0f}s', flush=True)
+                print(f'ep {ep} step {step}/{total} loss {loss.item():.4f} {time.time()-t0:.0f}s '
+                      f'peak {prof.peak_gb:.1f}GB', flush=True)
             log.append(float(loss.item()))
             if step >= total:
                 break
@@ -199,6 +202,7 @@ def main():
     trained = {n for n, p_ in model.named_parameters() if p_.requires_grad}
     torch.save({'model': {k: v.detach().cpu() for k, v in model.state_dict().items() if k in trained}}, ck)
     meta = {'train_sec': train_sec, 'steps': step, 'device': str(device), 'final_loss': float(np.mean(log[-10:])),
+            'train_peak_mem_gb': prof.peak_gb, 'batch_size': ft['batch_size'],
             'n_train_pairs': len(rows), 'n_train_hn': n_hn, 'checkpoint': str(ck)}
     (ck.with_suffix('.json')).write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=2), flush=True)
