@@ -99,3 +99,25 @@ def topk_from_scores(scores, k: int):
     part = np.argpartition(-scores, k - 1, axis=1)[:, :k]
     order = np.argsort(-np.take_along_axis(scores, part, 1), axis=1, kind='stable')
     return np.take_along_axis(part, order, 1)
+
+
+def bootstrap_ci(ranks, mask=None, *, n_boot: int = 1000, seed: int = 0, alpha: float = 0.05):
+    """Percentile bootstrap CI of the mean per-query score (queries resampled with replacement)."""
+    ranks = np.asarray(ranks, dtype=np.int64)
+    if mask is not None:
+        ranks = ranks[np.asarray(mask, dtype=bool)]
+    if ranks.size == 0:
+        return None
+    sc = per_query(ranks)['score']
+    rng = np.random.default_rng(seed)
+    means = sc[rng.integers(0, sc.size, (n_boot, sc.size))].mean(1)
+    lo, hi = np.quantile(means, [alpha / 2, 1 - alpha / 2])
+    return [float(lo), float(hi)]
+
+
+RECALL_KS = (1, 5, 10, 20, 50, 100, 200)
+
+
+def recall_curve(ranks, ks=RECALL_KS) -> dict[str, float]:
+    ranks = np.asarray(ranks)
+    return {str(k): float((ranks <= k).mean()) for k in ks}

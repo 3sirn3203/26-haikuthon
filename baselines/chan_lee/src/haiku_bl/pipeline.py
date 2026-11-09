@@ -32,6 +32,8 @@ def score(cfg: dict, prompts: list[str], image_paths: list, prof, device, *,
             np.save(emb_cache, img.astype(np.float16))
     with prof.stage('text_encode'):
         txt = ret.encode_texts(prompts, prof)
+    if emb_cache is not None:             # text embeddings next to the image cache (for ablations)
+        np.save(Path(emb_cache).with_name(Path(emb_cache).stem + f'__text{len(prompts)}.npy'), txt.astype(np.float16))
     with prof.stage('stage1_search'):
         s1 = ret.similarity(txt, img.astype(np.float32)).astype(np.float32)
     scores = s1

@@ -91,6 +91,42 @@ def apply(cfg: dict, scores, eval_set):
         return greedy_one_to_one(scores, cfg.get('top_k', 50))
     if kind == 'hungarian':
         return hungarian(scores, cfg.get('top_k', 50))
-    if kind == 'bundle_hungarian':
+    if kind == 'bundle_hungarian':          # oracle stage1 bundles (upper bound)
         return group_hungarian(scores, bundle_groups(eval_set.queries), cfg.get('top_k', 8))
+    if kind == 'text_group_hungarian':      # groups a participant can recover from prompt text alone
+        return group_hungarian(scores, text_groups(eval_set.queries), cfg.get('top_k', 8))
     raise ValueError(f'unknown postprocess {kind!r}')
+
+
+# ------------------------------------------------- bundle recovery from prompt text only
+# A participant can read the 8,000 test prompts and list the ~40 places, 12 media and 4 viewpoints;
+# grouping by (place, medium, viewpoint) recovers a superset of stage1's 8-prompt bundles.
+_LOCATIONS = sorted(['airport apron', 'art studio', 'bakery', 'beach', 'bedroom', 'cafe', 'campsite', 'classroom',
+                     'clothing store', 'dining room', 'farm', 'forest', 'garage', 'garden', 'greenhouse', 'harbor',
+                     'home office', 'kitchen', 'lakeside', 'library', 'living room', 'meadow', 'office', 'orchard',
+                     'park', 'parking lot', 'pasture', 'patio', 'playground', 'riverside', 'schoolyard',
+                     'snow field', 'sports field', 'sports hall', 'street', 'studio', 'train platform', 'workshop'],
+                    key=len, reverse=True)
+_STYLES = [('low_poly_3d', r'low[- ]poly'), ('clay_render', r'\bclay'), ('colored_pencil', r'colou?red[- ]pencil'),
+           ('pencil_sketch', r'pencil sketch|graphite'), ('flat_illustration', r'flat (vector )?illustration'),
+           ('gouache', r'gouache'), ('ink_drawing', r'\bink\b'), ('oil_painting', r'oil painting|\boil\b'),
+           ('paper_cut', r'paper[- ]?cut'), ('watercolor', r'watercolou?r'), ('render_3d', r'3d|three-dimensional'),
+           ('photograph', r'photo')]
+_VIEWS = [('overhead', r'overhead|top-down|bird'), ('oblique', r'oblique|angled|three-quarter'),
+          ('side', r'\bside view|from the side|side-on|\bside\b'), ('front', r'front')]
+
+
+def text_bundle_key(prompt: str):
+    import re
+    t = prompt.lower()
+    loc = next((l for l in _LOCATIONS if l in t), None)
+    sty = next((k for k, rx in _STYLES if re.search(rx, t)), None)
+    view = next((k for k, rx in _VIEWS if re.search(rx, t)), None)
+    return loc, sty, view
+
+
+def text_groups(queries) -> list[list[int]]:
+    d = defaultdict(list)
+    for i, q in enumerate(queries):
+        d[text_bundle_key(q.prompt)].append(i)
+    return list(d.values())

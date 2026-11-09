@@ -113,8 +113,10 @@ def main():
                                       eval_set=es)
 
     ranks = M.ranks_from_scores(scores, es.gt_index)
+    s1_ranks = ranks if s1 is scores else M.ranks_from_scores(s1, es.gt_index)
     top10 = M.topk_from_scores(scores, 10)
-    by = {k: M.summarize(ranks, m) for k, m in es.masks().items()}
+    masks = es.masks()
+    by = {k: dict(M.summarize(ranks, m), ci95=M.bootstrap_ci(ranks, m)) for k, m in masks.items()}
     t = prof.report()
     st = t['stages_sec']
     cached = info['image_embeddings_cached']
@@ -127,14 +129,18 @@ def main():
         'eval_split': 'test_full' if es.name == 'test' else es.name,
         'n_queries': len(es.queries), 'pool_size': len(es.pool),
         'n_hn_in_pool': sum(im.kind == 'hn' for im in es.pool),
-        'scores': M.summarize(ranks),
+        'scores': dict(M.summarize(ranks), ci95=M.bootstrap_ci(ranks)),
         'scores_by_split': {k: by[k] for k in ('public', 'private', 'val') if k in by},
         'scores_by_type': {k: by[k] for k in ('easy', 'bundle') if k in by},
         'public_split_provisional': es.public_provisional,
         'public_split_source': es.public_source,
         'expected_random': M.expected_random(len(es.pool)),
         'diagnostics': {'top1_breakdown': top1_breakdown(top10[:, 0], es),
-                        'stage1_hn_above_gt_rate': hn_above_gt(s1, es)},
+                        'stage1_hn_above_gt_rate': hn_above_gt(s1, es),
+                        # upper bound for any stage-2 reranker that rescoring the stage-1 top-K
+                        'stage1_recall_at_k': {k: M.recall_curve(s1_ranks[m]) for k, m in
+                                               [('all', np.ones(len(ranks), bool))] +
+                                               [(t, masks[t]) for t in ('public', 'private') if t in masks]}},
         'timing': {
             'device': t['device'], 'image_embeddings_cached': cached,
             'model_load_sec': st.get('model_load', 0.0),
@@ -160,6 +166,7 @@ def main():
     run.mkdir(parents=True, exist_ok=True)
     np.save(run / 'ranks.npy', ranks)
     np.save(run / 'top10.npy', top10)
+    np.save(run / 'stage1_ranks.npy', s1_ranks)
     s = result['scores']
     print(f'{exp_id}: score={s["score"]:.4f} R@1={s["recall_at_1"]:.4f} NDCG@5={s["ndcg_at_5"]:.4f} '
           + ' '.join(f'{k}={v["score"]:.4f}' for k, v in result['scores_by_split'].items())
