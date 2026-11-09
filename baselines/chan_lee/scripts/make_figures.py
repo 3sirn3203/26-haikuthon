@@ -27,7 +27,6 @@ plt.rcParams.update({
     'axes.spines.top': False, 'axes.spines.right': False, 'font.size': 10,
     'axes.titlesize': 12, 'axes.titleweight': 'bold', 'axes.titlelocation': 'left',
     'legend.frameon': False, 'lines.linewidth': 2, 'lines.markersize': 8,
-    'font.family': ['AppleGothic', 'DejaVu Sans'], 'axes.unicode_minus': False,
 })
 
 
@@ -41,7 +40,7 @@ def b1_models():
              'b1_clip_l14_336': 'OpenAI CLIP-L/14@336'}
     rows = [(lbl, load(n)['scores']) for n, lbl in names.items() if (R / n).exists()]
     rows.sort(key=lambda r: r[1]['score'])
-    fig, ax = plt.subplots(figsize=(7, 3.4))
+    fig, ax = plt.subplots(figsize=(7.6, 3.4))
     y = range(len(rows))
     sc = [r[1]['score'] for r in rows]
     lo = [r[1]['score'] - r[1]['ci95'][0] for r in rows]
@@ -53,8 +52,8 @@ def b1_models():
     ax.set_yticks(list(y), [r[0] for r in rows])
     ax.set_xlim(0, 0.55)
     ax.grid(axis='y', visible=False)
-    ax.set_xlabel('score = (R@1 + NDCG@5) / 2   (test 8,000문항, 후보 15,000장)')
-    ax.set_title('B1 zero-shot dual encoder')
+    ax.set_xlabel('score = (R@1 + NDCG@5) / 2  ·  8,000 queries, 15,000 images')
+    ax.set_title('B1: zero-shot dual encoders (whiskers: 95% CI)')
     fig.tight_layout()
     fig.savefig(OUT / 'b1_models.png', dpi=160)
 
@@ -77,13 +76,13 @@ def b3_k_curve():
                     va='center', fontsize=9, color=INK)
     if base is not None:
         ax.axhline(base, color=INK2, linestyle='--', linewidth=1, zorder=1)
-        ax.text(20.5, base - 0.02, f'1단계만 (SigLIP2) {base:.3f}', fontsize=9, color=INK2)
-    ax.set_xticks([0, 5, 10, 20], ['0\n(재정렬 없음)', '5', '10', '20'])
+        ax.text(20.5, base - 0.02, f'stage 1 only (SigLIP2) {base:.3f}', fontsize=9, color=INK2)
+    ax.set_xticks([0, 5, 10, 20], ['0\n(no rerank)', '5', '10', '20'])
     ax.set_xlim(-1, 31)
     ax.set_ylim(0.4, 0.8)
-    ax.set_xlabel('재정렬 후보 수 K (1단계 top-K)')
+    ax.set_xlabel('K = number of stage-1 candidates reranked (top-K)')
     ax.set_ylabel('score')
-    ax.set_title('B3 2단계 재정렬: K에 따른 점수 (test 400문항 층화 부분집합)')
+    ax.set_title('B3: two-stage reranking vs K (stratified 400-query test subset)')
     ax.legend(loc='upper left', fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / 'b3_k_curve.png', dpi=160)
@@ -94,15 +93,15 @@ def pareto():
     for n in ('b1_pecore_l14_336', 'b1_dfn5b_h14_378', 'b1_siglip2_so400m384', 'b1_qwen3vlemb_2b', 'b1_clip_l14_336'):
         if (R / n).exists():
             m = load(n)
-            pts.append(('B1 (1단계만, 실측)', m['timing']['total_sec'] / 60, m['scores']['score'], n[3:]))
-    for name, fam in (('b3_siglip2__qwen35_4b', 'B3 Qwen3.5 (2B/4B, 추정)'), ('b3_siglip2__qwen35_2b', 'B3 Qwen3.5 (2B/4B, 추정)'),
-                      ('b3_siglip2__qwen3vlrr_2b', 'B3 Qwen3-VL-Reranker-2B (추정)')):
+            pts.append(('B1 stage 1 only (measured)', m['timing']['total_sec'] / 60, m['scores']['score'], n[3:]))
+    for name, fam in (('b3_siglip2__qwen35_4b', 'B3 + Qwen3.5 2B/4B (estimated)'), ('b3_siglip2__qwen35_2b', 'B3 + Qwen3.5 2B/4B (estimated)'),
+                      ('b3_siglip2__qwen3vlrr_2b', 'B3 + Qwen3-VL-Reranker-2B (estimated)')):
         for k in (5, 10, 20):
             if (R / f'{name}_k{k}').exists():
                 m = load(f'{name}_k{k}')
                 tag = name.split('__')[1].replace('qwen35_', '').replace('qwen3vlrr_', 'rr')
                 pts.append((fam, m['timing']['total_sec'] / 60, m['scores']['score'], f'{tag} K{k}'))
-    colors = {'B1 (1단계만, 실측)': S1, 'B3 Qwen3.5 (2B/4B, 추정)': S2, 'B3 Qwen3-VL-Reranker-2B (추정)': S3}
+    colors = {'B1 stage 1 only (measured)': S1, 'B3 + Qwen3.5 2B/4B (estimated)': S2, 'B3 + Qwen3-VL-Reranker-2B (estimated)': S3}
     fig, ax = plt.subplots(figsize=(7.5, 4.2))
     for fam, c in colors.items():
         P = [p for p in pts if p[0] == fam]
@@ -115,9 +114,9 @@ def pareto():
                         color=INK2)
     ax.set_xscale('log')
     ax.set_xticks([10, 30, 60, 120, 240, 480, 960], ['10', '30', '60', '120', '240', '480', '960'])
-    ax.set_xlabel('test 전체 추론 시간 (분, Mac Studio M4 Max MPS 기준, 로그 축)')
+    ax.set_xlabel('full-test inference time (minutes, Mac Studio M4 Max MPS, log scale)')
     ax.set_ylabel('score')
-    ax.set_title('점수 vs 추론 시간 (MPS 기준, CUDA 아님)')
+    ax.set_title('Score vs inference time (MPS, not CUDA)')
     ax.legend(loc='lower right', fontsize=8.5)
     fig.tight_layout()
     fig.savefig(OUT / 'pareto_mps.png', dpi=160)
@@ -130,16 +129,16 @@ def hn_ablation():
     g = json.loads(f.read_text())['grid']
     xs = sorted(int(k) for k in g)
     fig, ax = plt.subplots(figsize=(7, 3.6))
-    for key, lbl, c in (('all', '전체 문항', S1), ('own_hn_absent', '자기 HN이 풀에 없는 문항', S2),
-                        ('own_hn_in_pool', '자기 HN이 풀에 있는 문항', S3)):
+    for key, lbl, c in (('all', 'all queries', S1), ('own_hn_absent', 'queries whose own HN is not in the pool', S2),
+                        ('own_hn_in_pool', 'queries whose own HN is in the pool', S3)):
         pts = [(x, g[str(x)][key]) for x in xs if g[str(x)][key] is not None]
         ax.plot([p[0] for p in pts], [p[1] for p in pts], color=c, marker='o', label=lbl, zorder=3)
         ax.annotate(f'{pts[-1][1]:.3f}', pts[-1], xytext=(6, 0), textcoords='offset points', va='center',
                     fontsize=9, color=INK)
-    ax.set_xlabel('test 후보 풀의 HN 이미지 수')
+    ax.set_xlabel('number of hard-negative images in the test candidate pool')
     ax.set_ylabel('score (SigLIP2 zero-shot)')
     ax.set_xlim(-300, 7900)
-    ax.set_title('A1 HN 수에 따른 난이도')
+    ax.set_title('A1: difficulty vs number of hard negatives')
     ax.legend(loc='upper right', fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / 'hn_ablation.png', dpi=160)
