@@ -15,17 +15,15 @@ components:
   train: outputs_stage1/train_components.jsonl
   test: outputs_stage1/test_components.jsonl
 
-# 이미지 파일 탐색 패턴. {id}는 네 자리 prompt id. 첫 번째로 존재하는 패턴을 쓴다.
-# 데이터 배포본 구조를 확인한 뒤 맞춘다 (현재 stage3 출력 구조를 기본값으로 둠).
-images:
-  train:    ["train/{id}/image.png", "train/{id}.png", "train/{id}.jpg"]
-  test:     ["test/{id}/image.png", "test/{id}.png", "test/{id}.jpg"]
-  train_hn: ["train_variants/{id}/image.png", "train_hn/{id}.png", "train_hn/{id}.jpg"]
-  test_hn:  ["test_variants/{id}/image.png", "test_hn/{id}.png", "test_hn/{id}.jpg"]
+# 데이터 패키지: <data_root>/<package>/{prompts.jsonl, images/**/*.png}
+# prompts.jsonl 행은 {"id", "prompts"}이고, HN 행은 "prompts": "hard_negative". 이미지 파일명 = 행 id.
+packages:
+  train: train_v1
+  test: test_v1
 
-# Public/Private. 파일이 없으면 잠정 규칙(provisional)을 쓴다:
-#   public = stage1 '기준'(묶음에 속하지 않는) 800문항 + 묶음 문항에서 seed로 뽑은 200문항,
-#   public 문항의 HN 이미지는 test 후보 풀에서 제외 (HN 7,000장).
+# Public/Private 결정 순서:
+#   1) public_ids 파일(공식)  2) scripts/pair_hn.py로 복원한 HN 출처에서 "HN이 없는 문항"
+#   3) 잠정 규칙: stage1 '기준' 800문항 + 묶음 문항 중 seed로 뽑은 200문항
 public_ids: ${HAIKU_PUBLIC_IDS:-}
 public_size: 1000
 split_seed: 20261111

@@ -98,7 +98,7 @@ def main():
 
     es = D.build_eval_set(cfg['eval_split'], paths_cfg, include_hn=cfg.get('include_hn', True))
     if limit:
-        es = D.EvalSet(es.name, es.queries[:limit], es.pool, es.public_provisional)
+        es = D.EvalSet(es.name, es.queries[:limit], es.pool, es.public_provisional, es.public_source)
     if cfg['retriever'].get('type') != 'random':
         missing = es.missing_images()
         if missing:
@@ -131,6 +131,7 @@ def main():
         'scores_by_split': {k: by[k] for k in ('public', 'private', 'val') if k in by},
         'scores_by_type': {k: by[k] for k in ('easy', 'bundle') if k in by},
         'public_split_provisional': es.public_provisional,
+        'public_split_source': es.public_source,
         'expected_random': M.expected_random(len(es.pool)),
         'diagnostics': {'top1_breakdown': top1_breakdown(top10[:, 0], es),
                         'stage1_hn_above_gt_rate': hn_above_gt(s1, es)},
