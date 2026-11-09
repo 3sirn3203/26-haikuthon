@@ -6,3 +6,4 @@ reranker: {type: vlm_yesno, model: Qwen/Qwen3.5-2B, dtype: bf16, batch_size: 10,
 k_max: 20
 k_list: [5, 10, 20]
 subset: {private: 300, public: 100, seed: 0}
+time_budget_min: 75

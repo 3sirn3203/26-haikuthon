@@ -84,7 +84,7 @@ def batches(rows, bs, mode, rng):
         rng.shuffle(gl)
         out, cur = [], []
         for g in gl:
-            if len(cur) + len(g) > bs:
+            if cur and len(cur) + len(g) > bs:
                 out.append(cur); cur = []
             cur += g
         if cur:
@@ -193,19 +193,21 @@ def main():
     train_sec = time.time() - t0
     ck = paths['cache_dir'] / 'ckpt' / f"{cfg['exp_id'].split('/', 1)[1]}.pt"
     ck.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({'model': {k: v for k, v in model.state_dict().items()}}, ck)
+    # only the trained tensors (retriever loads pretrained weights, then this with strict=False)
+    trained = {n for n, p_ in model.named_parameters() if p_.requires_grad}
+    torch.save({'model': {k: v.detach().cpu() for k, v in model.state_dict().items() if k in trained}}, ck)
     meta = {'train_sec': train_sec, 'steps': step, 'device': str(device), 'final_loss': float(np.mean(log[-10:])),
             'n_train_pairs': len(rows), 'n_train_hn': n_hn, 'checkpoint': str(ck)}
     (ck.with_suffix('.json')).write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=2), flush=True)
     del model
     if not a.no_eval:
-        for split in ('val',):
+        for split in ('val', 'test'):
             ecfg = dict(cfg)
             ecfg.pop('finetune', None)
             ecfg['retriever'] = dict(r, checkpoint=str(ck))
             ecfg['eval_split'] = split
-            ecfg['exp_id'] = cfg['exp_id'] + f'__{split}'
+            ecfg['exp_id'] = cfg['exp_id'] + ('__val' if split == 'val' else '')
             ecfg['finetune_meta'] = meta
             p = paths['cache_dir'] / 'ckpt' / f'eval_{split}.yaml'
             p.write_text(yaml.safe_dump(ecfg))

@@ -7,6 +7,8 @@ Config:
   exp_id, stage1_config (a B1 yaml whose test embeddings are cached), reranker {type, model, ...},
   k_max (e.g. 50), k_list (e.g. [5, 10, 20, 50]), subset {private: 300, public: 100, seed: 0}
 
+Optional time_budget_min stops scoring early (queries are processed in a seeded random order so a
+partial run stays stratified); metrics then use the queries finished.
 Each query's top-k_max (by stage-1 score) is rescored independently and saved after every query
 to cache/rerank/<name>.npz, so the run resumes after interruption. Reranker scores of a pair do
 not depend on K, so the top-K result for any K <= k_max is the rescored top-K of that run.
@@ -76,10 +78,16 @@ def main():
     with prof.stage('model_load'):
         rr = rerankers.build(cfg['reranker'], device)
     paths_pool = [im.path for im in es.pool]
-    t_last = time.time()
-    for n, (qi, cand) in enumerate(zip(qsel, top)):
+    t_last = t_start = time.time()
+    budget = cfg.get('time_budget_min')            # stop early; evaluate the queries done so far
+    order = np.random.default_rng(cfg['subset'].get('seed', 0)).permutation(len(qsel))  # keeps strata mixed
+    for n in order:
+        qi, cand = qsel[n], top[n]
         if int(qi) in done:
             continue
+        if budget and (time.time() - t_start) / 60 > budget:
+            print(f'time budget {budget} min reached after {len(done)} queries', flush=True)
+            break
         t0 = time.perf_counter()
         with prof.stage('rerank'):
             sc = rr.score(es.queries[qi].prompt, [paths_pool[j] for j in cand], prof)
@@ -98,6 +106,8 @@ def main():
     b1 = json.loads((CHAN / 'results' / s1cfg['exp_id'].split('/', 1)[1] / 'metrics.json').read_text())
     t1 = b1['timing']
     sec_pair = float(np.median(pair_sec))
+    keep = np.array([int(q) in done for q in qsel])
+    qsel, top = qsel[keep], top[keep]
     rr_scores = np.stack([done[int(q)] for q in qsel])
     sub = D.EvalSet(es.name, [es.queries[i] for i in qsel], es.pool, es.public_provisional, es.public_source)
     masks = sub.masks()
@@ -119,6 +129,7 @@ def main():
             'uses_train_hard_negatives': bool(s1cfg.get('uses_train_hard_negatives', False)),
             'violates_cross_query_rule': False,
             'eval_split': 'test_subset', 'n_queries': len(qsel), 'subset': cfg['subset'],
+            'subset_truncated_by_time_budget': bool(len(qsel) < sum(cfg['subset'].get(t, 0) for t in ('private', 'public'))),
             'pool_size': len(es.pool), 'n_hn_in_pool': sum(im.kind == 'hn' for im in es.pool),
             'scores': dict(M.summarize(ranks), ci95=M.bootstrap_ci(ranks)),
             'scores_by_split': {k: by[k] for k in ('public', 'private') if k in by},

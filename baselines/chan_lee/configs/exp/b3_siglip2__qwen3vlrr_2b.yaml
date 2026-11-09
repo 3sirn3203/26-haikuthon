@@ -6,3 +6,4 @@ reranker: {type: st_cross, model: Qwen/Qwen3-VL-Reranker-2B, dtype: bf16, batch_
 k_max: 20
 k_list: [5, 10, 20]
 subset: {private: 300, public: 100, seed: 0}
+time_budget_min: 75
