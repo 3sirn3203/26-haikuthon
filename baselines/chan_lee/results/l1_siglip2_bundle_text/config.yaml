@@ -1,0 +1,17 @@
+exp_id: chan_lee/l1_siglip2_bundle_text
+category: loophole
+method: 'L1 cross-query: Hungarian inside groups recovered from prompt text (place,
+  medium, viewpoint) on SigLIP2 so400m scores (forbidden; measures the gain the rule
+  blocks)'
+violates_cross_query_rule: true
+eval_split: test
+retriever:
+  type: openclip
+  model: ViT-SO400M-16-SigLIP2-384
+  pretrained: webli
+  precision: fp16
+  batch_size: 32
+  num_workers: 8
+postprocess:
+  type: text_group_hungarian
+  top_k: 8
