@@ -137,7 +137,8 @@ def main():
             'stage1_scores_same_subset': base,
             'stage1_recall_at_k_same_subset': float((s1_ranks <= K).mean()),
             'public_split_provisional': es.public_provisional, 'public_split_source': es.public_source,
-            'diagnostics': {'top1_breakdown': top1_breakdown(M.topk_from_scores(sc, 1)[:, 0], sub)},
+            'diagnostics': {'top1_breakdown': top1_breakdown(M.topk_from_scores(sc, 1)[:, 0], sub,
+                                                          {q.pid: q.bundle for q in es.queries})},
             'timing': {
                 'device': prof.report()['device'],
                 'measured_sec_per_pair': sec_pair, 'measured_pairs': len(pair_sec) * kmax,

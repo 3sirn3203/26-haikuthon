@@ -51,9 +51,12 @@ def emb_cache_path(cfg, es, paths_cfg):
     return paths_cfg['cache_dir'] / 'emb' / retrievers.cache_key(name, r.get('checkpoint')) / f'{es.name}_{h}.npy'
 
 
-def top1_breakdown(top1, es) -> dict:
-    """Where the top-1 image came from: GT, the query's own HN, a bundle sibling (or its HN), other."""
-    bundle_of = {q.pid: q.bundle for q in es.queries}
+def top1_breakdown(top1, es, bundle_of: dict | None = None) -> dict:
+    """Where the top-1 image came from: GT, the query's own HN, a bundle sibling (or its HN), other.
+
+    ``bundle_of`` maps every prompt id of the split to its bundle; pass it when ``es`` holds only a
+    query subset, otherwise siblings outside the subset would be counted as "other"."""
+    bundle_of = bundle_of or {q.pid: q.bundle for q in es.queries}
     cats = dict.fromkeys(('gt', 'own_hn', 'bundle_sibling', 'bundle_sibling_hn', 'other'), 0)
     for q, j in zip(es.queries, top1):
         im = es.pool[j]

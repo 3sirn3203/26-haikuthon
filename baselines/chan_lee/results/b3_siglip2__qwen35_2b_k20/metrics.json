@@ -104,9 +104,9 @@
     "top1_breakdown": {
       "gt": 0.6325,
       "own_hn": 0.0625,
-      "bundle_sibling": 0.0075,
-      "bundle_sibling_hn": 0.0025,
-      "other": 0.295
+      "bundle_sibling": 0.2425,
+      "bundle_sibling_hn": 0.0275,
+      "other": 0.035
     }
   },
   "timing": {
