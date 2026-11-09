@@ -1,0 +1,5 @@
+# 정이찬 (`ichan_jung`) 베이스라인
+
+- 이 폴더 안에서만 작업하고 푸시해 주세요. 커밋할 때는 `git add baselines/ichan_jung`처럼 본인 폴더 경로만 지정합니다(`git add -A` / `git add .` 금지).
+- 데이터, 모델 가중치, 임베딩 캐시는 커밋하지 않습니다.
+- 결과 파일은 [RESULTS_SCHEMA.md](../chan_lee/RESULTS_SCHEMA.md) 형식을 따라 `results/<exp_id>/metrics.json`에 둡니다.
