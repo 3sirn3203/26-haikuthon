@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 CHAN = Path(__file__).resolve().parents[1]
 R = CHAN / 'results'
 OUT = R / 'figures'
-S1, S2, S3 = '#2a78d6', '#eb6834', '#1baf7a'
+S1, S2, S3, S4 = '#2a78d6', '#eb6834', '#1baf7a', '#eda100'
 SURFACE, INK, INK2, GRID = '#fcfcfb', '#0b0b0b', '#52514e', '#e4e3df'
 
 plt.rcParams.update({
@@ -59,62 +59,72 @@ def b1_models():
 
 
 def b3_k_curve():
-    series = [('b3_siglip2__qwen35_4b', 'Qwen3.5-4B (yes/no)', S1),
+    series = [('b3_siglip2_bundle__qwen35_4b', 'fine-tuned SigLIP2 + Qwen3.5-4B', S4),
+              ('b3_siglip2__qwen35_4b', 'Qwen3.5-4B (yes/no)', S1),
               ('b3_siglip2__qwen35_2b', 'Qwen3.5-2B (yes/no)', S2),
               ('b3_siglip2__qwen3vlrr_2b', 'Qwen3-VL-Reranker-2B', S3)]
-    fig, ax = plt.subplots(figsize=(7, 3.8))
+    fig, ax = plt.subplots(figsize=(7.6, 4.0))
     base = None
     for name, lbl, c in series:
         ks = [k for k in (5, 10, 20) if (R / f'{name}_k{k}').exists()]
         if not ks:
             continue
         ms = [load(f'{name}_k{k}') for k in ks]
-        base = ms[0]['stage1_scores_same_subset']['score']
-        xs, ys = [0] + ks, [base] + [m['scores']['score'] for m in ms]
+        b0 = ms[0]['stage1_scores_same_subset']['score']
+        if 'bundle' not in name:
+            base = b0
+        xs, ys = [0] + ks, [b0] + [m['scores']['score'] for m in ms]
         ax.plot(xs, ys, color=c, marker='o', label=lbl, zorder=3)
-        ax.annotate(f'{lbl}  {ys[-1]:.3f}', (xs[-1], ys[-1]), xytext=(6, 0), textcoords='offset points',
-                    va='center', fontsize=9, color=INK)
+        best = max(range(len(ys)), key=lambda i: ys[i])
+        below = c == S2                      # keep the 2B label off the 4B line just above it
+        ax.annotate(f'{ys[best]:.3f}', (xs[best], ys[best]), xytext=(0, -15 if below else 8),
+                    textcoords='offset points', ha='center', fontsize=9, color=INK)
     if base is not None:
         ax.axhline(base, color=INK2, linestyle='--', linewidth=1, zorder=1)
-        ax.text(20.5, base - 0.02, f'stage 1 only (SigLIP2) {base:.3f}', fontsize=9, color=INK2)
-    ax.set_xticks([0, 5, 10, 20], ['0\n(no rerank)', '5', '10', '20'])
-    ax.set_xlim(-1, 31)
-    ax.set_ylim(0.4, 0.8)
+        ax.text(5.4, base - 0.025, f'zero-shot stage 1 only (SigLIP2) {base:.3f}', fontsize=8.5, color=INK2)
+    ax.set_xticks([0, 5, 10, 20], ['0\n(stage 1 only)', '5', '10', '20'])
+    ax.set_xlim(-1, 27)
+    ax.set_ylim(0.4, 0.84)
     ax.set_xlabel('K = number of stage-1 candidates reranked (top-K)')
     ax.set_ylabel('score')
     ax.set_title('B3: two-stage reranking vs K (stratified 400-query test subset)')
-    ax.legend(loc='upper left', fontsize=9)
+    ax.legend(loc='lower right', fontsize=8.5, frameon=True, facecolor=SURFACE, edgecolor=SURFACE, framealpha=1)
     fig.tight_layout()
     fig.savefig(OUT / 'b3_k_curve.png', dpi=160)
 
 
 def pareto():
+    fams = {'stage 1 only (measured)': S1, 'zero-shot stage 1 + reranker (estimated)': S2,
+            'fine-tuned stage 1 + Qwen3.5-4B (estimated)': S3}
+    F1, F2, F3 = fams
     pts = []
-    for n in ('b1_pecore_l14_336', 'b1_dfn5b_h14_378', 'b1_siglip2_so400m384', 'b1_qwen3vlemb_2b', 'b1_clip_l14_336'):
+    for n in ('b1_pecore_l14_336', 'b1_dfn5b_h14_378', 'b1_siglip2_so400m384', 'b1_qwen3vlemb_2b', 'b1_clip_l14_336',
+              'b2_siglip2_bundle'):
         if (R / n).exists():
             m = load(n)
-            pts.append(('B1 stage 1 only (measured)', m['timing']['total_sec'] / 60, m['scores']['score'], n[3:]))
-    for name, fam in (('b3_siglip2__qwen35_4b', 'B3 + Qwen3.5 2B/4B (estimated)'), ('b3_siglip2__qwen35_2b', 'B3 + Qwen3.5 2B/4B (estimated)'),
-                      ('b3_siglip2__qwen3vlrr_2b', 'B3 + Qwen3-VL-Reranker-2B (estimated)')):
+            lbl = 'b2 fine-tuned SigLIP2' if n.startswith('b2') else n[3:]
+            pts.append((F1, m['timing']['total_sec'] / 60, m['scores']['score'], lbl))
+    for name in ('b3_siglip2__qwen35_4b', 'b3_siglip2__qwen35_2b', 'b3_siglip2__qwen3vlrr_2b',
+                 'b3_siglip2_bundle__qwen35_4b'):
         for k in (5, 10, 20):
             if (R / f'{name}_k{k}').exists():
                 m = load(f'{name}_k{k}')
                 tag = name.split('__')[1].replace('qwen35_', '').replace('qwen3vlrr_', 'rr')
-                pts.append((fam, m['timing']['total_sec'] / 60, m['scores']['score'], f'{tag} K{k}'))
-    colors = {'B1 stage 1 only (measured)': S1, 'B3 + Qwen3.5 2B/4B (estimated)': S2, 'B3 + Qwen3-VL-Reranker-2B (estimated)': S3}
-    fig, ax = plt.subplots(figsize=(7.5, 4.2))
-    for fam, c in colors.items():
+                pts.append((F3 if 'bundle' in name else F2, m['timing']['total_sec'] / 60, m['scores']['score'],
+                            f'{tag} K{k}'))
+    fig, ax = plt.subplots(figsize=(7.8, 4.4))
+    for fam, c in fams.items():
         P = [p for p in pts if p[0] == fam]
         ax.scatter([p[1] for p in P], [p[2] for p in P], s=56, color=c, edgecolor=SURFACE, linewidth=2,
                    label=fam, zorder=3)
-    offsets = {'siglip2_so400m384': (5, -12)}
+    offsets = {'siglip2_so400m384': (5, -12), 'b2 fine-tuned SigLIP2': (-40, 8), '4b K10': (5, -12)}
     for fam, t, s, lbl in pts:
-        if fam.startswith('B1') or lbl.endswith('K20') or lbl.endswith('K5'):
+        if fam != F2 or lbl.endswith('K20') or lbl.endswith('K5'):
             ax.annotate(lbl, (t, s), xytext=offsets.get(lbl, (5, 4)), textcoords='offset points', fontsize=8,
                         color=INK2)
     ax.set_xscale('log')
     ax.set_xticks([10, 30, 60, 120, 240, 480, 960], ['10', '30', '60', '120', '240', '480', '960'])
-    ax.set_xlabel('full-test inference time (minutes, Mac Studio M4 Max MPS, log scale)')
+    ax.set_xlabel('full-test inference time (minutes, Mac Studio M4 Max MPS, log scale; training time excluded)')
     ax.set_ylabel('score')
     ax.set_title('Score vs inference time (MPS, not CUDA)')
     ax.legend(loc='lower right', fontsize=8.5)
