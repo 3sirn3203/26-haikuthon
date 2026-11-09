@@ -2,28 +2,15 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
 from pathlib import Path
 
 import numpy as np
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader, Dataset
 
 from ..profiling import Profiler, param_count_b
-
-
-class ImageFiles(Dataset):
-    def __init__(self, paths, transform):
-        self.paths = [str(p) for p in paths]
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.paths)
-
-    def __getitem__(self, i):
-        with Image.open(self.paths[i]) as im:
-            return self.transform(im.convert('RGB'))
 
 
 def _autocast(device, precision):
@@ -57,22 +44,34 @@ class OpenCLIPRetriever:
 
     @torch.inference_mode()
     def encode_images(self, paths, prof: Profiler | None = None) -> np.ndarray:
-        loader = DataLoader(ImageFiles(paths, self.preprocess), batch_size=self.batch_size,
-                            num_workers=self.num_workers, pin_memory=self.device.type == 'cuda',
-                            persistent_workers=False, prefetch_factor=4 if self.num_workers else None)
-        out, it = [], iter(loader)
-        while True:
-            t = time.perf_counter()
-            try:
-                batch = next(it)
-            except StopIteration:
-                break
-            if prof:                         # time the main loop waits on decode/IO
-                prof.add('image_io_wait', time.perf_counter() - t)
-            ctx = prof.stage('image_forward') if prof else nullcontext()
-            with ctx, _autocast(self.device, self.precision):
-                f = self.model.encode_image(batch.to(self.device, non_blocking=True))
-                out.append(torch.nn.functional.normalize(f.float(), dim=-1).cpu())
+        """Decode with a thread pool (PIL releases the GIL) and prefetch the next batch while the
+        current one runs on the device. torch DataLoader workers are avoided: on macOS (spawn +
+        file_system sharing) they were ~60x slower than single-process decoding."""
+        paths = [str(p) for p in paths]
+        bs = self.batch_size
+        starts = list(range(0, len(paths), bs))
+
+        def load(p):
+            with Image.open(p) as im:
+                return self.preprocess(im.convert('RGB'))
+
+        def load_batch(s):
+            return torch.stack(list(pool.map(load, paths[s:s + bs])))
+
+        out = []
+        with ThreadPoolExecutor(max(1, self.num_workers)) as pool, ThreadPoolExecutor(1) as prefetch:
+            nxt = prefetch.submit(load_batch, starts[0]) if starts else None
+            for k, s in enumerate(starts):
+                t = time.perf_counter()
+                batch = nxt.result()
+                if prof:                     # time the device waits on decode/IO
+                    prof.add('image_io_wait', time.perf_counter() - t)
+                if k + 1 < len(starts):
+                    nxt = prefetch.submit(load_batch, starts[k + 1])
+                ctx = prof.stage('image_forward') if prof else nullcontext()
+                with ctx, _autocast(self.device, self.precision):
+                    f = self.model.encode_image(batch.to(self.device, non_blocking=True))
+                    out.append(torch.nn.functional.normalize(f.float(), dim=-1).cpu())
         return torch.cat(out).numpy()
 
     @torch.inference_mode()

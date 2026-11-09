@@ -6,5 +6,8 @@ def build(cfg: dict, device):
     kind = cfg['type']
     if kind == 'vlm_yesno':
         from .vlm_yesno import VLMYesNoReranker
-        return VLMYesNoReranker(device=device, **{k: v for k, v in cfg.items() if k != 'type'})
+        return VLMYesNoReranker(device=device, **{k: v for k, v in cfg.items() if k not in ('type', 'top_k')})
+    if kind == 'st_cross':
+        from .st_cross import STCrossReranker
+        return STCrossReranker(device=device, **{k: v for k, v in cfg.items() if k not in ('type', 'top_k')})
     raise ValueError(f'unknown reranker type {kind!r}')

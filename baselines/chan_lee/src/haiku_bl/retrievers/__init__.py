@@ -9,4 +9,7 @@ def build(cfg: dict, device):
         return RandomRetriever(**cfg)
     if kind == 'openclip':
         return OpenCLIPRetriever(device=device, **{k: v for k, v in cfg.items() if k != 'type'})
+    if kind == 'st_embed':
+        from .st_embed import STEmbedRetriever
+        return STEmbedRetriever(device=device, **{k: v for k, v in cfg.items() if k != 'type'})
     raise ValueError(f'unknown retriever type {kind!r}')

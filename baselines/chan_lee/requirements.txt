@@ -19,3 +19,6 @@ pyyaml==6.0.3
 matplotlib==3.11.2
 tqdm==4.70.1
 pytest==9.2.0
+sentence-transformers==6.2.0
+qwen-vl-utils==0.0.14
+gdown==6.5.1
