@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from ..profiling import param_count_b
+from ..profiling import log_progress, param_count_b
 
 
 class STEmbedRetriever:
@@ -42,6 +42,7 @@ class STEmbedRetriever:
                                          convert_to_numpy=True, show_progress_bar=False))
             if prof:
                 prof.sample()
+            log_progress(s + len(ims), len(paths))
         return np.concatenate(out).astype(np.float32)
 
     @torch.inference_mode()

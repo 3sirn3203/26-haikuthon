@@ -110,3 +110,22 @@ class Profiler:
 
 def param_count_b(*modules) -> float:
     return sum(p.numel() for m in modules if m is not None for p in m.parameters()) / 1e9
+
+
+_progress_t0 = {}
+
+
+def log_progress(done: int, total: int, every: float = 0.05, key: str = 'images'):
+    """Print 'images 3000/15000 (20%) 12.3/s eta 16.2 min' to stderr about every 5%."""
+    import sys
+    now = time.perf_counter()
+    t0 = _progress_t0.setdefault(key, [now, done, -1])   # start time, start count, last bucket
+    step = max(1, int(total * every))
+    if done // step == t0[2] and done != total:
+        return
+    t0[2] = done // step
+    rate = (done - t0[1]) / max(now - t0[0], 1e-9)
+    eta = (total - done) / rate / 60 if rate > 0 else float('nan')
+    print(f'{key} {done}/{total} ({100 * done / total:.0f}%) {rate:.1f}/s eta {eta:.1f} min', file=sys.stderr, flush=True)
+    if done == total:
+        _progress_t0.pop(key, None)

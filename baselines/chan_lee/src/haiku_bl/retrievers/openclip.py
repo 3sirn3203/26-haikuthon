@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from ..profiling import Profiler, param_count_b
+from ..profiling import log_progress, Profiler, param_count_b
 
 
 def _autocast(device, precision):
@@ -72,6 +72,7 @@ class OpenCLIPRetriever:
                 with ctx, _autocast(self.device, self.precision):
                     f = self.model.encode_image(batch.to(self.device, non_blocking=True))
                     out.append(torch.nn.functional.normalize(f.float(), dim=-1).cpu())
+                log_progress(s + len(batch), len(paths))
         return torch.cat(out).numpy()
 
     @torch.inference_mode()
