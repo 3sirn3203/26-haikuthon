@@ -1,0 +1,130 @@
+{
+  "exp_id": "chan_lee/b3_siglip2__qwen3vlrr_2b_k5",
+  "author": "chan_lee",
+  "category": "honest",
+  "method": "B3 two-stage: SigLIP2 top-K reranked by Qwen3-VL-Reranker-2B (cross-encoder) (top-5 of chan_lee/b1_siglip2_so400m384)",
+  "stage1_model": "ViT-SO400M-16-SigLIP2-384:webli",
+  "stage2_model": "Qwen/Qwen3-VL-Reranker-2B",
+  "top_k": 5,
+  "uses_train_finetune": false,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "eval_split": "test_subset",
+  "n_queries": 400,
+  "subset": {
+    "private": 300,
+    "public": 100,
+    "seed": 0
+  },
+  "subset_truncated_by_time_budget": false,
+  "pool_size": 15000,
+  "n_hn_in_pool": 7000,
+  "scores": {
+    "recall_at_1": 0.485,
+    "ndcg_at_5": 0.6389862986377015,
+    "score": 0.5619931493188508,
+    "n": 400,
+    "recall_at_5": 0.75,
+    "recall_at_10": 0.89,
+    "median_rank": 2.0,
+    "ci95": [
+      0.5198965420209303,
+      0.6036201227208078
+    ]
+  },
+  "scores_by_split": {
+    "public": {
+      "recall_at_1": 0.56,
+      "ndcg_at_5": 0.6828147566887981,
+      "score": 0.6214073783443991,
+      "n": 100,
+      "recall_at_5": 0.77,
+      "recall_at_10": 0.91,
+      "median_rank": 1.0,
+      "ci95": [
+        0.5389933262716432,
+        0.701146133979501
+      ]
+    },
+    "private": {
+      "recall_at_1": 0.46,
+      "ndcg_at_5": 0.6243768126206692,
+      "score": 0.5421884063103346,
+      "n": 300,
+      "recall_at_5": 0.7433333333333333,
+      "recall_at_10": 0.8833333333333333,
+      "median_rank": 2.0,
+      "ci95": [
+        0.4947038252291948,
+        0.592479841079677
+      ]
+    }
+  },
+  "scores_by_type": {
+    "easy": {
+      "recall_at_1": 0.7659574468085106,
+      "ndcg_at_5": 0.9001978199088208,
+      "score": 0.8330776333586657,
+      "n": 47,
+      "recall_at_5": 0.9787234042553191,
+      "recall_at_10": 0.9787234042553191,
+      "median_rank": 1.0,
+      "ci95": [
+        0.7455508838487889,
+        0.9126125374620078
+      ]
+    },
+    "bundle": {
+      "recall_at_1": 0.4475920679886686,
+      "ndcg_at_5": 0.6042074275336147,
+      "score": 0.5258997477611417,
+      "n": 353,
+      "recall_at_5": 0.7195467422096318,
+      "recall_at_10": 0.8781869688385269,
+      "median_rank": 2.0,
+      "ci95": [
+        0.47726128998900313,
+        0.5699376990138051
+      ]
+    }
+  },
+  "stage1_scores_same_subset": {
+    "recall_at_1": 0.3425,
+    "ndcg_at_5": 0.5523150785582736,
+    "score": 0.4474075392791368,
+    "n": 400,
+    "recall_at_5": 0.75,
+    "recall_at_10": 0.89,
+    "median_rank": 3.0
+  },
+  "stage1_recall_at_k_same_subset": 0.75,
+  "public_split_provisional": true,
+  "public_split_source": "hn_pairing",
+  "diagnostics": {
+    "top1_breakdown": {
+      "gt": 0.515,
+      "own_hn": 0.0425,
+      "bundle_sibling": 0.0125,
+      "bundle_sibling_hn": 0.0025,
+      "other": 0.4275
+    }
+  },
+  "timing": {
+    "device": "mps:M4Max",
+    "measured_sec_per_pair": 0.15339416147471638,
+    "measured_pairs": 8000,
+    "model_load_sec": 73.23031420801999,
+    "image_encode_sec": 789.9048047499964,
+    "text_encode_sec": 41.644592666998506,
+    "stage1_search_sec": 0.13029633305268362,
+    "rerank_sec": 6135.766458988655,
+    "rerank_sec_is_estimate": true,
+    "total_sec": 7040.676466946723,
+    "total_sec_is_estimate": true
+  },
+  "peak_vram_gb": 6.1706390380859375,
+  "params_b": 3.263571634,
+  "artifact_size_gb": 6.527143268,
+  "git_commit": "c8aa3a3-dirty",
+  "date": "2026-11-09T18:48:02"
+}
