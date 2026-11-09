@@ -1,0 +1,25 @@
+category: honest
+eval_split: test
+exp_id: chan_lee/b2_siglip2_bundle
+finetune_meta:
+  batch_size: 32
+  checkpoint: /Users/chanlee/Desktop/Programming/haikuthon/baselines/chan_lee/cache/ckpt/b2_siglip2_bundle.pt
+  device: mps
+  final_loss: 1.7123942017555236
+  n_train_hn: 0
+  n_train_pairs: 3500
+  steps: 550
+  train_peak_mem_gb: 18.415756225585938
+  train_sec: 1371.1448068618774
+method: 'B2 fine-tuned dual encoder: SigLIP2 so400m, last 4 blocks + heads, sigmoid
+  loss; whole stage1 bundles per batch = hard in-batch negatives (a'')'
+retriever:
+  batch_size: 32
+  checkpoint: /Users/chanlee/Desktop/Programming/haikuthon/baselines/chan_lee/cache/ckpt/b2_siglip2_bundle.pt
+  model: ViT-SO400M-16-SigLIP2-384
+  num_workers: 8
+  precision: fp16
+  pretrained: webli
+  type: openclip
+uses_train_finetune: true
+uses_train_hard_negatives: false
