@@ -1,0 +1,7 @@
+exp_id: chan_lee/b0_random_test
+category: honest
+method: 'B0 sanity: uniform random scores; checks the metric against its expectation'
+eval_split: test
+retriever:
+  type: random
+  seed: 0
