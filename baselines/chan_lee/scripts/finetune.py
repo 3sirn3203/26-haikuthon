@@ -187,6 +187,10 @@ def main():
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             opt.step(); sched.step(); step += 1
             prof.sample()
+            if device.type == 'mps':
+                # bundle batches vary in size; without this the MPS allocator cache keeps growing
+                # (14.8 -> 29.5 GB in 90 steps) until the machine swaps
+                torch.mps.empty_cache()
             if step % 10 == 0 or step == 1:
                 print(f'ep {ep} step {step}/{total} loss {loss.item():.4f} {time.time()-t0:.0f}s '
                       f'peak {prof.peak_gb:.1f}GB', flush=True)
