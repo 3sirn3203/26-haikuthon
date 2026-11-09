@@ -21,7 +21,5 @@ done
 for c in b2_siglip2_inbatch b2_siglip2_bundle b2_siglip2_bundle_hn; do
   [ -f configs/exp/$c.yaml ] && run $c .venv/bin/python scripts/finetune.py --config configs/exp/$c.yaml
 done
-for c in b1_openclip_h14 b1_eva02_l14_336 b1_metaclip2_h14_378; do
-  run $c .venv/bin/python scripts/run_exp.py --config configs/exp/$c.yaml
-done
+# b1_openclip_h14 / b1_eva02_l14_336 / b1_metaclip2_h14_378 dropped (11/9): weights deleted to free disk
 log QUEUE_FINISHED

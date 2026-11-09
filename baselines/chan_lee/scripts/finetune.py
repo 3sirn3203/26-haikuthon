@@ -111,10 +111,12 @@ def unfreeze(model, n_last):
             for b in list(blocks)[-n_last:]:
                 for p in b.parameters():
                     p.requires_grad = True
-    # heads/norms/projections/logit scale
+    # output-side heads/norms/projections/logit scale
     for name, p in model.named_parameters():
         if any(k in name for k in ('proj', 'head', 'ln_post', 'ln_final', 'norm', 'logit_scale', 'logit_bias',
-                                   'text_projection', 'attn_pool')) and not any(k in name for k in ('blocks.', 'resblocks.')):
+                                   'text_projection', 'attn_pool')) and not any(k in name for k in ('blocks.', 'resblocks.')) \
+                and not any(k in name for k in ('patch_embed', 'token_embedding', 'pos_embed', 'positional_embedding')):
+            # input-side embeddings stay frozen: unfreezing them makes autograd keep every block's activations
             p.requires_grad = True
     return [p for p in model.parameters() if p.requires_grad]
 
