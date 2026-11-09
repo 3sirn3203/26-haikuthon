@@ -1,6 +1,6 @@
 # chan_lee: HAIKUTHON 베이스라인 (참가자 입장에서 풀어 보기)
 
-목적: 대회 규정(추론 시간 제한, 모델 크기 제한, train HN 제공 여부, 난이도, 규정 허점)을 정할 근거를 측정합니다. 11/11 회의용 결론은 [REPORT.md](REPORT.md)에, 결과 형식은 [RESULTS_SCHEMA.md](RESULTS_SCHEMA.md)에 있습니다.
+목적: 대회 규정(추론 시간 제한, 모델 크기 제한, train HN 제공 여부, 난이도, 규정 허점)을 정할 근거를 측정합니다. 11/11 회의용 결론은 [REPORT.md](REPORT.md)에, 결과 형식은 [RESULTS_SCHEMA.md](../RESULTS_SCHEMA.md)에 있습니다.
 
 ## 재현
 

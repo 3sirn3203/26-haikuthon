@@ -13,4 +13,4 @@
 
 ## 결과 형식
 
-모든 실험은 [chan_lee/RESULTS_SCHEMA.md](chan_lee/RESULTS_SCHEMA.md)의 `results/<exp_id>/metrics.json` 스키마를 따릅니다. 나중에 11명의 결과를 한꺼번에 모아 분석합니다.
+모든 실험은 [RESULTS_SCHEMA.md](RESULTS_SCHEMA.md)의 `results/<exp_id>/metrics.json` 스키마를 따릅니다. 나중에 11명의 결과를 한꺼번에 모아 분석합니다.
