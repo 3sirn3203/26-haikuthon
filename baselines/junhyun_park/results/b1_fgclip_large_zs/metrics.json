@@ -1,0 +1,54 @@
+{
+  "exp_id": "junhyun_park/b1_fgclip_large_zs",
+  "author": "junhyun_park",
+  "category": "honest",
+  "method": "FG-CLIP large zero-shot (v1, bf16, walk_short_pos, max_length 77), 서버 형식 submission.zip, Modal L4 end-to-end (서버 evaluation.runner.evaluate)",
+  "stage1_model": "qihoo360/fg-clip-large",
+  "stage2_model": null,
+  "top_k": null,
+  "uses_train_finetune": false,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "eval_split": "test_full",
+  "scores": {
+    "n": 8000,
+    "recall_at_1": 0.3121,
+    "ndcg_at_5": 0.5348,
+    "score": 0.4234
+  },
+  "scores_by_split": {
+    "public": {
+      "n": 1000,
+      "recall_at_1": 0.348,
+      "ndcg_at_5": 0.558,
+      "score": 0.453
+    },
+    "private": {
+      "n": 7000,
+      "recall_at_1": 0.307,
+      "ndcg_at_5": 0.5314,
+      "score": 0.4192
+    }
+  },
+  "timing": {
+    "device": "cuda:L4",
+    "image_embeddings_cached": false,
+    "model_load_sec": null,
+    "image_encode_sec": null,
+    "image_io_wait_sec": null,
+    "text_encode_sec": null,
+    "stage1_search_sec": 0.2,
+    "rerank_sec": null,
+    "total_sec": 304.92,
+    "setup_sec": null
+  },
+  "peak_vram_gb": 4.61,
+  "params_b": 0.43,
+  "artifact_size_gb": 1.72,
+  "git_commit": "2f06683-dirty",
+  "date": "2026-11-11",
+  "n_queries": 8000,
+  "pool_size": 15000,
+  "n_hn_in_pool": 7000,
+  "public_split_provisional": true
+}
