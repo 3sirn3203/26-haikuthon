@@ -171,5 +171,3 @@ git push origin main
 - [ ] 문항 간 정보를 쓴 실험은 `loophole`로 표시했다
 - [ ] 데이터, 가중치, 캐시, 예측 파일이 커밋에 없다(`git status`, `git diff --cached --stat`으로 확인)
 - [ ] `git add baselines/<이름_성>`으로만 스테이징했다
-
-문의: 이찬
