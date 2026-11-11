@@ -37,7 +37,9 @@ cells = [
 - 평가: chan_lee와 같은 묶음 val 500문항, 후보 풀 = val 원본 500 + val HN 102. 1단계 top-5 / top-10을 재정렬.
 - 학습 데이터: train 3,500문항(val 묶음 제외). test는 쓰지 않는다.
 
-**순서**: 1) Drive → 2) 설정 → 3) 설치 → 4) 데이터 → 5) 코드 → 6) 1단계 후보 → 7) R0 → 8) R1 → 9) R2 → 10) 비교
+**순서**: 1) Drive → 2) 설정 → 3) 설치 → 4) 데이터 → 5) 코드 → 6) 1단계 후보 → 7) R0 → 8) R1 → 9) R2 → 10) 비교 → 11) test 재정렬
+
+- **test만 돌릴 때**: 1~5 실행(SMOKE=False) → 6의 두 번째 셀(함수 정의)은 건너뛰어도 됨 → 11로 바로 간다.
 
 - 런타임: **GPU (A100 권장, L4 가능)**. 결과(1단계 후보, LoRA 어댑터, 점수)는 Drive `RERANK_DIR`에 저장되고, 이미 있으면 건너뛴다. **런타임이 끊기면 1~5를 다시 실행한 뒤 이어서** 돌리면 된다.
 - **처음에는 `SMOKE = True`로 끝까지 한 번 돌려** 오류가 없는지 확인한다(몇 분). 확인되면 `False`로 바꾸고 1~5 다음 6부터 다시 실행한다. SMOKE 결과는 별도 폴더에 저장된다.
@@ -200,6 +202,52 @@ for n in ["R0", "R1", "R2"]:
                      "쌍당 초": r["sec_per_pair"]})
 display(pd.DataFrame(rows))
 print("1단계 R@5 / R@10 (K=5 / K=10 의 상한):", {k: json.load(open(STAGE1_JSON))["stage1_val"][k] for k in ("recall_at_5", "recall_at_10")})
+"""),
+    md("""
+## 11. test 재정렬 (test_v1 8,000문항, 후보 15,000장)
+
+1단계(FG-CLIP)로 test 전체 풀에서 문항별 top-10을 뽑고, 그중 top-`TEST_K`를 LoRA 재정렬기로 다시 정렬해 서버 형식 CSV(`prompt_id,prediction` 상위 5개)를 만든다.
+
+- 필요한 Drive 파일: `test_v1.tar` (공유 폴더에서 내 드라이브로 바로가기). **test 프롬프트·이미지·정답은 출력하지 않는다.**
+- 시간(L4, 2B, 쌍당 약 0.067초): K=5면 4만 쌍으로 약 45분, K=10이면 약 90분.
+- 문항별 점수를 Drive `test_scores_*.jsonl`에 이어 쓴다. **런타임이 끊기면 1~5와 이 셀들을 다시 실행하면 끝난 문항은 건너뛴다.**
+- 마지막에 1단계 top-5 그대로의 점수(`stage1_top5`)도 같이 나온다. 이게 Modal 결과 0.6731과 거의 같으면 1단계가 제대로 돈 것이다.
+"""),
+    code("""
+TEST_ADAPTER = "R1"     # 쓸 LoRA 어댑터 (RERANK_DIR/adapter_<이름>). zero-shot 이면 None
+TEST_K = 5              # 재정렬할 1단계 후보 수
+TEST_TAR = ""           # 비우면 MyDrive 에서 test_v1.tar 자동 탐색
+
+TEST_ROOT = "/content/data_test"          # train 데이터(/content/data)와 섞이지 않게 따로 푼다
+if not glob.glob(f"{TEST_ROOT}/**/prompts.jsonl", recursive=True):
+    TEST_TAR = TEST_TAR or find_in_drive("test_v1.tar")
+    os.makedirs(TEST_ROOT, exist_ok=True)
+    !cp "{TEST_TAR}" /content/test_v1.tar
+    !tar -xf /content/test_v1.tar -C "{TEST_ROOT}" --no-same-owner
+    !rm /content/test_v1.tar
+TEST_DIR = os.path.dirname(glob.glob(f"{TEST_ROOT}/**/prompts.jsonl", recursive=True)[0])
+print("TEST_DIR =", TEST_DIR, "| png:", sum(1 for _ in glob.iglob(TEST_DIR + "/images/**/*.png", recursive=True)), "(15000 이어야 함)")
+
+STAGE1_TEST_JSON = f"{RERANK_DIR}/stage1_test_topk.json"
+if not os.path.exists(STAGE1_TEST_JSON):
+    !PYTHONPATH=/content/tf446 python /content/work/stage1_topk.py --test --k_test 10 --stage1 "{STAGE1}" \\
+        --data "{TEST_DIR}" --out "{STAGE1_TEST_JSON}"
+print("1단계 단독 test:", json.load(open(STAGE1_TEST_JSON))["stage1_test"])
+"""),
+    code("""
+import sys, gc
+sys.path.insert(0, "/content/work")
+import importlib, rerank_lib as R; importlib.reload(R)
+tag = f"{TEST_ADAPTER or 'R0'}_k{TEST_K}"
+ad = f"{RERANK_DIR}/adapter_{TEST_ADAPTER}" if TEST_ADAPTER else None
+rr = R.Reranker(RERANKER, MAX_PIXELS, adapter=ad)
+test_res = R.rerank_test(rr, TEST_DIR, STAGE1_TEST_JSON, f"{RERANK_DIR}/test_{tag}.csv", k=TEST_K,
+                         ckpt=f"{RERANK_DIR}/test_scores_{tag}.jsonl")
+test_res.update({"adapter": ad, "reranker": RERANKER, "stage1": STAGE1, "max_pixels": MAX_PIXELS,
+                 "stage1_test_full": json.load(open(STAGE1_TEST_JSON))["stage1_test"],
+                 "gpu": torch.cuda.get_device_name(0), "peak_vram_gb": round(torch.cuda.max_memory_allocated() / 2**30, 2)})
+json.dump(test_res, open(f"{RERANK_DIR}/test_results_{tag}.json", "w"), indent=1)
+print("->", f"{RERANK_DIR}/test_results_{tag}.json")
 """),
 ]
 

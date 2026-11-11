@@ -12,6 +12,9 @@
   modal run baselines/junhyun_park/scripts/modal_run_fgclip.py --zip fgclip_base.zip
   modal volume get jp-fgclip-zip /results/fgclip_base.csv baselines/junhyun_park/build/   # 결과 CSV
   python baselines/junhyun_park/scripts/score_csv.py baselines/junhyun_park/build/fgclip_base.csv
+
+재정렬 zip (modal_build_rerank.py 가 볼륨에 만든 것): --budget 0 이면 시간 예산 없이 전체 재정렬
+  modal run baselines/junhyun_park/scripts/modal_run_fgclip.py --zip fgclip_qwen2b_r1_k5.zip --budget 0
 """
 import json
 import os
@@ -33,15 +36,17 @@ image = (
 )
 
 
-@app.function(image=image, gpu="L4", cpu=4, memory=16384, timeout=1800,
+@app.function(image=image, gpu="L4", cpu=4, memory=16384, timeout=3600,   # 재정렬 zip 전체 측정용 (서버 GPU 제한은 15분)
               volumes={"/dataset": dataset_vol.read_only(), "/zips": zip_vol})
-def run(zip_name: str, limit_note: str = "") -> dict:
+def run(zip_name: str, limit_note: str = "", budget: str = "") -> dict:
     import time
     import traceback
 
     import torch
     from evaluation.runner import evaluate
 
+    if budget != "":
+        os.environ["HAIKU_RERANK_BUDGET"] = budget   # 재정렬 zip 의 시간 예산 덮어쓰기 (0 = 제한 없음)
     zip_vol.reload()
     out = Path("/tmp/result.csv")
     t0 = time.monotonic()
@@ -73,8 +78,8 @@ def info() -> dict:
 
 
 @app.local_entrypoint()
-def main(zip: str = "fgclip_base.zip", show_info: bool = False):
+def main(zip: str = "fgclip_base.zip", show_info: bool = False, budget: str = ""):
     if show_info:
         print(json.dumps(info.remote(), indent=2))
         return
-    print(json.dumps(run.remote(zip), indent=2, ensure_ascii=False))
+    print(json.dumps(run.remote(zip, budget=budget), indent=2, ensure_ascii=False))

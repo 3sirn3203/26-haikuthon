@@ -18,5 +18,6 @@
 | `finetune/make_val_ids.py` | chan_lee `val_split`과 같은 묶음 val(`val_ids.txt`)과 묶음 표(`train_bundles.json`) 생성. 이미지 없이 실행 |
 | `finetune/colab_finetune.ipynb` | Colab 노트북: 무작위 배치(`rand_bval`) vs 묶음 배치(`bundle_bval`), 묶음 val로 비교 후 zip 생성 |
 | `finetune/colab_rerank.ipynb`, `finetune/rerank/` | 재정렬기(Qwen3.5-2B) LoRA 파인튜닝: R0 zero-shot / R1 FT / R2 FT+train HN, 묶음 val로 비교. 노트북은 `rerank/make_notebook.py`로 생성 |
+| `submission/rerank/model.py`, `scripts/rerank_pack.py`, `scripts/modal_build_rerank.py` | 2단계 제출 zip: FG-CLIP(표준 CLIP으로 로드) top-K → Qwen3.5 LoRA 병합본 Yes/No 재정렬. Modal 안에서 zip 생성·검증, `modal_run_fgclip.py --budget`으로 시간 예산 조절 |
 
 재현 순서는 각 스크립트 상단 docstring 참고. 결과는 `results/<실험이름>/`에 기록한다.

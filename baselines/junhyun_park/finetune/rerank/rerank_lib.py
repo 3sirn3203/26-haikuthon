@@ -226,3 +226,79 @@ def train(rr: Reranker, data: TrainData, *, use_hn, n_neg=3, prompts_per_step=2,
         log.append({"epoch": ep, "loss": sum(run_loss) / len(run_loss), "acc": sum(run_acc) / len(run_acc)})
     rr.model.eval()
     return {"epochs": log, "train_min": round((time.time() - t0) / 60, 1), "opt_steps": opt_step}
+
+
+# ------------------------------------------------------------------ test
+@torch.no_grad()
+def rerank_test(rr: Reranker, data_dir, topk_json, out_csv, *, k=5, pairs_per_batch=10, ckpt=None,
+                public=range(7000, 8000), log_every=500):
+    """test 원본 프롬프트마다 1단계 top-k 를 재정렬해 서버 형식 CSV(prompt_id,prediction 상위 5개)를 쓴다.
+
+    ckpt(jsonl): 문항별 재정렬 점수를 이어 쓰고, 다시 실행하면 끝난 문항은 건너뛴다 (Colab 끊김 대비).
+    동점은 1단계 순서를 유지한다(예측이므로 비관적 처리 없음). 채점은 정답 = 같은 id (서버 규칙과 같음).
+    """
+    data = Path(data_dir)
+    rows = [json.loads(l) for l in open(data / "prompts.jsonl", encoding="utf-8") if l.strip()]
+    prompt = {r["id"]: r.get("prompts", r.get("prompt")) for r in rows if r.get("prompts", r.get("prompt")) != "hard_negative"}
+    path = {p.stem: p for p in (data / "images").rglob("*.png")}
+    s1 = json.load(open(topk_json))
+    topk = s1["test_topk"]
+    qs = sorted(prompt)
+    assert len(topk[qs[0]]) >= k, f"1단계 후보가 {len(topk[qs[0]])}개뿐 (k={k})"
+
+    done = {}
+    if ckpt and Path(ckpt).exists():
+        for l in open(ckpt):
+            if l.strip():
+                d = json.loads(l)
+                if d["k"] == k:
+                    done[d["id"]] = d["s"]
+    todo = [q for q in qs if q not in done]
+    print(f"[test] 문항 {len(qs)} / 이미 끝남 {len(done)} / 남음 {len(todo)} | K={k}, 쌍 {len(todo) * k}")
+
+    q_per = max(1, pairs_per_batch // k)
+    chunks = [todo[i:i + q_per] for i in range(0, len(todo), q_per)]
+    load = lambda ch: [_POOL.submit(load_image, path[c]) for q in ch for c in topk[q][:k]]
+    t0, buf = time.time(), []
+    fh = open(ckpt, "a") if ckpt else None
+    nxt = load(chunks[0]) if chunks else None
+    for ci, ch in enumerate(chunks):
+        ims = [f.result() for f in nxt]
+        if ci + 1 < len(chunks):
+            nxt = load(chunks[ci + 1])                       # 다음 묶음 이미지를 미리 읽음
+        sc = rr.margins([prompt[q] for q in ch for _ in range(k)], ims).tolist()
+        for j, q in enumerate(ch):
+            done[q] = [round(x, 5) for x in sc[j * k:(j + 1) * k]]
+            buf.append(json.dumps({"id": q, "k": k, "s": done[q]}))
+        if fh and (len(buf) >= 50 or ci + 1 == len(chunks)):
+            fh.write("\n".join(buf) + "\n"); fh.flush(); buf = []
+        n = (ci + 1) * q_per
+        if n % log_every < q_per:
+            el = time.time() - t0
+            print(f"  [test] {min(n, len(todo))}/{len(todo)}  {el / 60:.1f}분, 남은 시간 약 "
+                  f"{el / min(n, len(todo)) * (len(todo) - min(n, len(todo))) / 60:.0f}분", flush=True)
+    if fh:
+        fh.close()
+    sec = time.time() - t0
+
+    ranks, ranks_s1, pub = [], [], []
+    with open(out_csv, "w") as f:
+        f.write("prompt_id,prediction\n")
+        for q in qs:
+            c = topk[q]
+            order = sorted(range(k), key=lambda j: (-done[q][j], j))
+            pred = ([c[j] for j in order] + c[k:])[:5]
+            f.write(f"{q},{' '.join(pred)}\n")
+            ranks.append(pred.index(q) + 1 if q in pred else 99)
+            ranks_s1.append(c[:5].index(q) + 1 if q in c[:5] else 99)
+            pub.append(int(q) in public)
+    res = {"k": k, "n": len(qs),
+           "rerank": score_metrics(ranks),
+           "rerank_public": score_metrics([r for r, p in zip(ranks, pub) if p]),
+           "rerank_private": score_metrics([r for r, p in zip(ranks, pub) if not p]),
+           "stage1_top5": score_metrics(ranks_s1),
+           "rerank_sec_this_run": round(sec, 1),
+           "sec_per_pair_this_run": round(sec / max(1, len(todo) * k), 4),
+           "csv": str(out_csv)}
+    print(json.dumps(res, indent=1))
+    return res

@@ -12,6 +12,11 @@ FG-CLIP 원격코드는 transformers==4.46.3 이 필요하고 재정렬기(Qwen3
   val_gt_rank:{val 프롬프트 id: 1단계 정답 순위(1부터, 동점 비관적)}
   stage1_val: 1단계 단독 val 점수, R@5/R@10
 이미지 id 는 패키지 파일명(원본 '0005', HN '4005')이다.
+
+test 모드 (--test, val_ids 불필요): 데이터 = test_v1, 후보 풀 = 전체 15,000장(원본 + HN), 질의 = 원본 프롬프트 8,000.
+  test_topk:        {test 프롬프트 id: [이미지 id x k_test]}   재정렬 대상
+  test_topk_scores: {test 프롬프트 id: [코사인 유사도 x k_test]}
+  stage1_test:      1단계 단독 test 점수 (정답 = 같은 id, 서버 채점과 같은 규칙), R@5/R@10
 """
 import argparse
 import json
@@ -56,12 +61,49 @@ def metrics(ranks):
             "recall_at_10": round(sum(r <= 10 for r in ranks) / n, 4)}
 
 
+def encode(model, tok, proc, dev, max_len, walk, img_paths, texts):
+    """이미지·텍스트 정규화 임베딩 (float32, GPU)."""
+    dl = DataLoader(ImgDS(img_paths, proc), batch_size=128, num_workers=4)
+    feats, tfe = [], []
+    with torch.inference_mode():
+        for px in dl:
+            feats.append(F.normalize(model.get_image_features(px.to(dev, torch.bfloat16)).float(), dim=-1))
+        for s in range(0, len(texts), 256):
+            t = tok(texts[s:s + 256], padding="max_length", truncation=True,
+                    max_length=max_len, return_tensors="pt")["input_ids"].to(dev)
+            tfe.append(F.normalize(model.get_text_features(t, walk_short_pos=walk).float(), dim=-1))
+    return torch.cat(feats), torch.cat(tfe)
+
+
+def run_test(a, model, tok, proc, dev, max_len, walk, text, orig, hn, files):
+    import time
+    ids = orig + hn
+    print(f"[stage1-test] {a.stage1} | 질의 {len(orig)} / 후보 풀 {len(ids)}")
+    t0 = time.time()
+    img, txt = encode(model, tok, proc, dev, max_len, walk, [files[i] for i in ids], [text[i] for i in orig])
+    t_enc = time.time() - t0
+    S = txt @ img.T                                            # (질의, 풀)
+    top_s, top_i = S.topk(a.k_test, dim=1)
+    pos = {i: j for j, i in enumerate(ids)}
+    gt = S[torch.arange(len(orig)), torch.tensor([pos[q] for q in orig])]
+    ranks = (S >= gt[:, None]).sum(1).tolist()                 # 정답 = 같은 id, 비관적 순위
+    res = {"stage1": a.stage1, "mode": "test", "k_test": a.k_test,
+           "test_topk": {q: [ids[j] for j in row] for q, row in zip(orig, top_i.tolist())},
+           "test_topk_scores": {q: [round(x, 6) for x in row] for q, row in zip(orig, top_s.tolist())},
+           "stage1_test": metrics(ranks), "encode_sec": round(t_enc, 1)}
+    Path(a.out).write_text(json.dumps(res))
+    print("[stage1-test] 1단계 단독 test:", res["stage1_test"], f"| encode {t_enc:.0f}s")
+    print("->", a.out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage1", required=True, help="FG-CLIP 파인튜닝 폴더 또는 HF repo id")
     ap.add_argument("--base", default="qihoo360/fg-clip-base")
     ap.add_argument("--data", required=True, help="train_v1 폴더 (prompts.jsonl, images/)")
-    ap.add_argument("--val_ids", required=True)
+    ap.add_argument("--val_ids", help="train 모드에서 필수")
+    ap.add_argument("--test", action="store_true", help="test_v1 전체 풀에서 원본 프롬프트별 top-k")
+    ap.add_argument("--k_test", type=int, default=10)
     ap.add_argument("--out", required=True)
     ap.add_argument("--k_train", type=int, default=20)
     ap.add_argument("--k_val", type=int, default=20)
@@ -84,6 +126,8 @@ def main():
     width = len(orig[0])
     hn_src = {h: f"{int(h) - len(orig):0{width}d}" for h in hn}       # chan_lee pair_hn.py 와 같은 순서 규칙
     files = {p.stem: p for p in (data / "images").rglob("*.png")}
+    if a.test:
+        return run_test(a, model, tok, proc, dev, max_len, walk, text, orig, hn, files)
     val = {f"{int(l):0{width}d}" for l in open(a.val_ids) if l.strip()}
     fit = [i for i in orig if i not in val]
     val = sorted(val)
@@ -91,18 +135,9 @@ def main():
     print(f"[stage1] {a.stage1} | fit {len(fit)} / val {len(val)} / val pool {len(val_pool)}")
 
     ids = orig + hn
-    dl = DataLoader(ImgDS([files[i] for i in ids], proc), batch_size=128, num_workers=4)
-    feats = []
-    with torch.inference_mode():
-        for px in dl:
-            feats.append(F.normalize(model.get_image_features(px.to(dev, torch.bfloat16)).float(), dim=-1))
-        img = dict(zip(ids, torch.cat(feats)))
-        tfe = []
-        for s in range(0, len(orig), 256):
-            t = tok([text[i] for i in orig[s:s + 256]], padding="max_length", truncation=True,
-                    max_length=max_len, return_tensors="pt")["input_ids"].to(dev)
-            tfe.append(F.normalize(model.get_text_features(t, walk_short_pos=walk).float(), dim=-1))
-        txt = dict(zip(orig, torch.cat(tfe)))
+    img_t, txt_t = encode(model, tok, proc, dev, max_len, walk, [files[i] for i in ids], [text[i] for i in orig])
+    img = dict(zip(ids, img_t))
+    txt = dict(zip(orig, txt_t))
 
     def topk(queries, pool, k):
         P = torch.stack([img[i] for i in pool])
