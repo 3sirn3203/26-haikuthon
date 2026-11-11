@@ -7,3 +7,5 @@
 | b3_siglip2_bundle_l4__qwen35_4b_full_k3 | test_subset | 1183 | 0.7933 | 0.7337 | 0.8530 | 0.8497 | 0.7851 | 4077 (추정) | 9.9 |
 | b3_siglip2_bundle_l4__qwen35_4b_full_k5 | test_subset | 1183 | 0.8092 | 0.7498 | 0.8686 | 0.8617 | 0.8015 | 6532 (추정) | 9.9 |
 | b5_fusion_pairwise_l4 | test_subset | 1183 | 0.8292 |  |  | 0.8769 | 0.8222 |  | 8.8 |
+| b6_stage1_wise_ensemble_l4 | test_full | 8000 | 0.6770 |  |  | 0.7439 | 0.6675 |  | 5.6 |
+| b7_vlm_question_ensemble_l4 | test_subset | 727 | 0.8390 |  |  | 0.8793 | 0.8333 |  | 5.6 |

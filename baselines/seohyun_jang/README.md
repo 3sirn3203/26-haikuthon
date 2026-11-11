@@ -27,6 +27,8 @@
 | b3_siglip2_bundle_l4__qwen35_4b_full_k3 | test_subset | 1183 | 0.7933 | 0.7337 | 0.8530 | 0.8497 | 0.7851 | 4077 (추정) | 9.9 |
 | b3_siglip2_bundle_l4__qwen35_4b_full_k5 | test_subset | 1183 | 0.8092 | 0.7498 | 0.8686 | 0.8617 | 0.8015 | 6532 (추정) | 9.9 |
 | b5_fusion_pairwise_l4 | test_subset | 1183 | 0.8292 |  |  | 0.8769 | 0.8222 |  | 8.8 |
+| b6_stage1_wise_ensemble_l4 | test_full | 8000 | 0.6770 |  |  | 0.7439 | 0.6675 |  | 5.6 |
+| b7_vlm_question_ensemble_l4 | test_subset | 727 | 0.8390 |  |  | 0.8793 | 0.8333 |  | 5.6 |
 
 - B3·B5는 test 부분집합. B3의 `총 시간`은 측정한 쌍당 시간(0.153s/pair)으로 test 8,000문항을 환산한 **추정치**.
 - 1단계 실측(캐시 없음): B1 이미지 인코딩 294s(15,000장), 모델 로드 52s.
@@ -44,6 +46,30 @@
 - **loophole 후보**: (1) HN은 원본과 같은 시드라 픽셀 쌍둥이 → 이미지 풀만으로 쌍 구조가 드러남. 어느 쪽이 원본인지 가리려면 결국 문항 간 정보가 필요해 L1(Hungarian)과 같은 계열이지만, 배포 전 **HN 시드 변경** 권고.
   (2) 생성기(Qwen-Image-2512 Lightning)와 시드 규칙이 알려지면 재생성 후 픽셀 일치로 정답 탐색 가능 → id 익명화·시드 비공개 필수.
 - 쌍둥이 탐지 분석 결과: `analysis/` (e1_score_fusion.json, e2_twin_pairs.json)
+
+## 추가 실험 2 (18:20~)
+
+### B6 1단계 모델 섞기 — test 전체 8,000문항, 튜닝 없음(고정 0.5 / 동일 가중)
+
+| 변형 | score | Public | Private |
+|---|---|---|---|
+| zero_shot | 0.4263 | 0.4661 | 0.4206 |
+| finetuned | 0.6770 | 0.7439 | 0.6675 |
+| wise_ft_0.5 | 0.5813 | 0.6307 | 0.5743 |
+| score_ens_zs+ft | 0.6141 | 0.6683 | 0.6064 |
+| score_ens_wise+ft | 0.6507 | 0.7116 | 0.6420 |
+
+### B7 VLM 질문 앙상블 — B3 문항 중 무작위 727문항, K=5, 튜닝 없음(z-score 동일 가중)
+
+| 변형 | score | Public | Private |
+|---|---|---|---|
+| orig_yesno_k5 | 0.8110 | 0.8534 | 0.8050 |
+| alt_question_k5 | 0.8276 | 0.8700 | 0.8216 |
+| orig+alt_k5 | 0.8198 | 0.8622 | 0.8138 |
+| orig+stage1_k5 (M1) | 0.8071 | 0.8630 | 0.7992 |
+| orig+alt+stage1_k5 | 0.8390 | 0.8793 | 0.8333 |
+
+- 두 번째 질문 채점 비용: 쌍당 0.149s (L4).
 
 ## 재현
 Colab L4에서 `haikuthon_colab.ipynb`를 위에서부터 실행. 🔑 `GH_TOKEN`(classic, repo), 내 드라이브에 공유 폴더 `haikuthon` 바로가기 필요.
