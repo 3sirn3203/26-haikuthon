@@ -64,12 +64,14 @@ def letter(i):
     return chr(65 + i) if i < 26 else 'A' + chr(65 + i - 26)
 
 
-def main():
+def build_rows():
+    """All configurations with stable letter IDs (assigned by ascending headline score)."""
     rows = []
     for author, name, stage, text in FROM_JSON:
         m = json.loads((BASE / author / 'results' / name / 'metrics.json').read_text())
         rows.append(dict(author=author, stage=stage, text=text, score=m['scores']['score'],
-                         n=m.get('n_queries', 8000), val=False))
+                         n=m.get('n_queries', 8000), val=False, name=name,
+                         s1_same=(m.get('stage1_scores_same_subset') or {}).get('score')))
     for author, stage, text, score, n, _ in README_ONLY:
         rows.append(dict(author=author, stage=stage, text=text, score=score, n=n, val=False))
     for author, stage, text, score, n, _ in VAL_ONLY:
@@ -77,7 +79,11 @@ def main():
     rows.sort(key=lambda r: (r['val'], r['score']))
     for i, r in enumerate(rows):
         r['id'] = letter(i)
+    return rows
 
+
+def main():
+    rows = build_rows()
     plt.rcParams.update({'figure.facecolor': SURFACE, 'axes.facecolor': SURFACE, 'savefig.facecolor': SURFACE,
                          'text.color': INK, 'axes.labelcolor': INK2, 'xtick.color': INK2, 'ytick.color': INK,
                          'axes.edgecolor': GRID, 'font.size': 10, 'hatch.color': SURFACE, 'hatch.linewidth': 1.5})
