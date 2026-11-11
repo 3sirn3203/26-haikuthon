@@ -1,0 +1,88 @@
+{
+  "exp_id": "seohyun_jang/b5_fusion_pairwise_l4",
+  "author": "seohyun_jang",
+  "category": "honest",
+  "method": "On B3 rerank scores (b2_siglip2_bundle_l4 top-10 + Qwen3.5-4B yes/no): M1 score fusion with stage-1 z-score (weight chosen on the other half, 2-fold); M2 pairwise top-2 comparison (both orders) on M1 k5",
+  "eval_split": "test_subset",
+  "n_queries": 1183,
+  "pool_size": 15000,
+  "uses_train_finetune": true,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "stage1_model": "ViT-SO400M-16-SigLIP2-384:webli (fine-tuned)",
+  "stage2_model": "Qwen/Qwen3.5-4B",
+  "scores": {
+    "score": 0.8292089351834131
+  },
+  "scores_by_split": {
+    "private": {
+      "score": 0.8222338945516079
+    },
+    "public": {
+      "score": 0.876879411554427
+    }
+  },
+  "variants": {
+    "stage1_only": {
+      "all": 0.6785918009467643,
+      "n": 1183,
+      "private": 0.6640155122358851,
+      "public": 0.7782125290899915
+    },
+    "rerank_only_k5": {
+      "all": 0.8122659597488243,
+      "n": 1183,
+      "private": 0.8043712479319433,
+      "public": 0.8662218709741315
+    },
+    "M1_fusion_k5": {
+      "all": 0.8292089351834131,
+      "n": 1183,
+      "private": 0.8222338945516079,
+      "public": 0.876879411554427,
+      "w_by_fold": [
+        1,
+        1
+      ]
+    },
+    "rerank_only_k10": {
+      "all": 0.8021983312317924,
+      "n": 1183,
+      "private": 0.7934774993150906,
+      "public": 0.86180030830488
+    },
+    "M1_fusion_k10": {
+      "all": 0.8408957739892541,
+      "n": 1183,
+      "private": 0.8343167246445321,
+      "public": 0.8858598728220567,
+      "w_by_fold": [
+        1,
+        1
+      ]
+    },
+    "M2_pairwise_top2_on_M1k5": {
+      "all": 0.8321021521031692,
+      "n": 1183,
+      "private": 0.8248871314632912,
+      "public": 0.8814127567412763,
+      "tau_by_fold": [
+        1,
+        1
+      ],
+      "base_same_queries": {
+        "all": 0.8292089351834131,
+        "n": 1183,
+        "private": 0.8222338945516079,
+        "public": 0.876879411554427
+      },
+      "sec_per_query_L4": 0.5141342067154202,
+      "peak_vram_gb": 8.753795146942139
+    }
+  },
+  "timing": {
+    "device": "cuda:L4",
+    "pairwise_sec_per_query": 0.5141342067154202
+  },
+  "peak_vram_gb": 8.753795146942139
+}

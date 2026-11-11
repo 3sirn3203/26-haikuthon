@@ -1,0 +1,7 @@
+exp_id: seohyun_jang/b4_e2e_siglip2_bundle_l4__qwen35_4b_k5
+category: honest
+method: "end-to-end blind inference (predict.py): fine-tuned SigLIP2 top-5 -> Qwen3.5-4B rerank"
+uses_train_finetune: true
+eval_split: test
+retriever: {type: openclip, model: ViT-SO400M-16-SigLIP2-384, pretrained: webli, precision: fp16, batch_size: 64, num_workers: 8, checkpoint: /content/haikuthon/baselines/chan_lee/cache/ckpt/b2_siglip2_bundle_l4.pt}
+reranker: {type: vlm_yesno, model: Qwen/Qwen3.5-4B, dtype: bf16, batch_size: 10, max_pixels: 200704, top_k: 5}

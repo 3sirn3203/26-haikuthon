@@ -1,0 +1,6 @@
+exp_id: seohyun_jang/b2_siglip2_bundle_l4
+category: honest
+method: "stage-1 of b2_siglip2_bundle_l4 (fine-tuned checkpoint), base for B3"
+uses_train_finetune: true
+eval_split: test
+retriever: {type: openclip, model: ViT-SO400M-16-SigLIP2-384, pretrained: webli, precision: fp16, batch_size: 64, num_workers: 8, checkpoint: /content/haikuthon/baselines/chan_lee/cache/ckpt/b2_siglip2_bundle_l4.pt}
