@@ -38,6 +38,16 @@ def main():
     for p in snap.iterdir():
         if p.is_file() and p.name != "model.py" and p.suffix not in SKIP_SUFFIX and not p.name.startswith("."):
             shutil.copy(p.resolve(), stage / p.name)  # symlink 해제 복사
+    # 파인튜닝(save_pretrained) 결과의 auto_map 은 "<허브repo>--modeling_x.Cls" 로 저장돼 오프라인에서 허브를 찾다 실패한다 -> 접두어 제거
+    for jn in ("config.json", "preprocessor_config.json", "tokenizer_config.json"):
+        jp = stage / jn
+        if jp.exists():
+            d = json.loads(jp.read_text(encoding="utf-8"))
+            am = d.get("auto_map")
+            if isinstance(am, dict):
+                d["auto_map"] = {k: ([x.split("--", 1)[-1] if isinstance(x, str) else x for x in v] if isinstance(v, list)
+                                     else v.split("--", 1)[-1] if isinstance(v, str) else v) for k, v in am.items()}
+                jp.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
     # 원격코드가 model.py 를 덮지 않도록: 원본 repo의 modeling 파일은 그대로 두고 제출 model.py만 추가
     shutil.copy(HERE / "submission/fgclip/model.py", stage / "model.py")
     (stage / "fgclip_meta.json").write_text(json.dumps(

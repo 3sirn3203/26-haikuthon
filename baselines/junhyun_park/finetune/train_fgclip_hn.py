@@ -8,7 +8,12 @@
   python train_fgclip_hn.py --prompts train_prompts_v2.jsonl --images /content/train_v1/images \
       --repo qihoo360/fg-clip-base --hn 2 --out runs/hn2
 결과: runs/<name>/ (safetensors + 원격코드 + 토크나이저) -> build_fgclip_submission.py --repo runs/<name> 로 zip 생성.
-검증 점수는 train 내부 holdout 이라 같은 묶음(bundle) 문항이 섞여 과대평가될 수 있다. 최종 판단은 서버/테스트셋 점수로.
+
+검증: --val_ids 를 주면 chan_lee 와 같은 번들 단위 val(make_val_ids.py 출력)을 쓰고, val 후보 풀에
+  val 문항의 train HN 이미지(약 100장)도 넣는다 (chan_lee build_eval_set('val') 과 같은 조건).
+  --val_ids 가 없으면 무작위 분할이라 같은 묶음 문항이 학습/검증에 섞여 과대평가된다.
+묶음 배치: --batching bundle --bundles train_bundles.json 이면 stage1 묶음(8문항)을 통째로 한 배치에 넣는다
+  (chan_lee scripts/finetune.py 의 batches(mode='bundle') 와 같은 방식). 기준 문항은 1개짜리 묶음으로 취급.
 """
 import argparse, json, math, random, re, sys, time
 from pathlib import Path
@@ -17,7 +22,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, Sampler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hn_rules import make_hard_negatives
@@ -35,6 +40,46 @@ def load_rows(prompts_path, images_dir):
             continue
         rows.append({"id": r["id"], "prompt": text, "path": files[r["id"]]})
     return rows
+
+
+def load_hn_images(prompts_path, images_dir):
+    """train HN 이미지 -> 출처 프롬프트 id. 짝은 chan_lee pair_hn.py 와 같은 순서 규칙(HN id = n_orig + k <-> k)."""
+    files = {p.stem: p for p in Path(images_dir).rglob("*.png")}
+    ids = [json.loads(l) for l in open(prompts_path, encoding="utf-8") if l.strip()]
+    hn = [r["id"] for r in ids if r.get("prompt", r.get("prompts")) == "hard_negative"]
+    n_orig = len(ids) - len(hn)
+    return [{"source": str(int(h) - n_orig), "path": files[h]} for h in hn if h in files]
+
+
+class BundleBatchSampler(Sampler):
+    """묶음을 통째로 한 배치에 넣는다. 매 epoch 묶음 순서를 다시 섞는다 (chan_lee batches(mode='bundle'))."""
+
+    def __init__(self, rows, bundles, bs, seed):
+        groups = {}
+        for i, r in enumerate(rows):
+            g = bundles.get(str(int(r["id"])))
+            groups.setdefault(g or f"easy:{r['id']}", []).append(i)
+        self.groups, self.bs, self.rng = list(groups.values()), bs, random.Random(seed)
+        assert max(map(len, self.groups)) <= bs, "묶음 크기가 배치보다 큼"
+        self._len = len(self._make())
+
+    def _make(self):
+        gl = self.groups[:]
+        self.rng.shuffle(gl)
+        out, cur = [], []
+        for g in gl:
+            if cur and len(cur) + len(g) > self.bs:
+                out.append(cur); cur = []
+            cur += g
+        if cur:
+            out.append(cur)
+        return out
+
+    def __iter__(self):
+        return iter(self._make())
+
+    def __len__(self):
+        return self._len
 
 
 class DS(Dataset):
@@ -80,6 +125,7 @@ def encode_text(model, tok, texts, dev, max_len, walk):
 
 @torch.no_grad()
 def evaluate(model, tok, val_rows, val_px, dev, max_len, walk, amp):
+    """val_px 의 앞 len(val_rows)장이 정답(같은 순서), 나머지는 후보 풀에만 들어가는 HN 이미지."""
     model.eval()
     with torch.autocast(dev.type, dtype=amp, enabled=dev.type == "cuda"):
         img = torch.cat([F.normalize(model.get_image_features(val_px[i:i + 64].to(dev)).float(), dim=-1)
@@ -87,8 +133,8 @@ def evaluate(model, tok, val_rows, val_px, dev, max_len, walk, amp):
         txt = torch.cat([encode_text(model, tok, [r["prompt"] for r in val_rows[i:i + 256]], dev, max_len, walk)
                          for i in range(0, len(val_rows), 256)])
     sim = txt @ img.T
-    gt = sim.diag()
-    rank = (sim > gt[:, None]).sum(1).cpu().numpy()  # 정답보다 점수가 높은 이미지 수
+    gt = sim[:, :len(val_rows)].diag()
+    rank = (sim >= gt[:, None]).sum(1).cpu().numpy() - 1  # 정답 이상 점수인 다른 이미지 수 (동점 비관적)
     r1 = float((rank == 0).mean())
     nd = float(np.where(rank < 5, 1.0 / np.log2(rank + 2), 0.0).mean())
     return {"recall@1": round(r1, 4), "ndcg@5": round(nd, 4), "score": round((r1 + nd) / 2, 4)}
@@ -107,6 +153,9 @@ def main():
     ap.add_argument("--last_n", type=int, default=4)
     ap.add_argument("--val", type=int, default=500)
     ap.add_argument("--val_ids", default="", help="번들 단위 val id 목록 (make_val_ids.py 출력). 없으면 무작위 분할(번들 누수 가능)")
+    ap.add_argument("--val_hn", type=int, default=1, help="--val_ids 사용 시 val 문항의 HN 이미지를 val 후보 풀에 넣기 (1/0)")
+    ap.add_argument("--batching", choices=["random", "bundle"], default="random")
+    ap.add_argument("--bundles", default="", help="make_val_ids.py 가 만든 train_bundles.json (--batching bundle 에 필요)")
     ap.add_argument("--long", action="store_true", help="긴 캡션 모드(max_length 248, walk_short_pos=False)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--workers", type=int, default=4)
@@ -129,7 +178,10 @@ def main():
     else:
         random.Random(a.seed).shuffle(rows)
         val_rows, tr_rows = rows[:a.val], rows[a.val:]
-    print(f"[data] train {len(tr_rows)} / val {len(val_rows)} | amp={amp} max_len={max_len} hn={a.hn}")
+    val_ids = {str(int(r["id"])) for r in val_rows}
+    val_hn = [h for h in load_hn_images(a.prompts, a.images) if h["source"] in val_ids] if (a.val_ids and a.val_hn) else []
+    print(f"[data] train {len(tr_rows)} / val {len(val_rows)} (+HN {len(val_hn)} in val pool) | amp={amp} "
+          f"max_len={max_len} hn={a.hn} batching={a.batching}")
 
     model = AutoModelForCausalLM.from_pretrained(a.repo, trust_remote_code=True, torch_dtype=torch.float32).to(dev)
     tok = AutoTokenizer.from_pretrained(a.repo, trust_remote_code=True)
@@ -138,18 +190,28 @@ def main():
     scale = model.logit_scale.exp().detach() if hasattr(model, "logit_scale") else torch.tensor(100.0, device=dev)
     scale = scale.clamp(max=100).to(dev)
 
-    val_px = torch.stack([DS(val_rows, proc)[i][0] for i in range(len(val_rows))]).half()
+    pool = val_rows + [{"path": h["path"], "prompt": ""} for h in val_hn]
+    val_px = torch.stack([DS(pool, proc)[i][0] for i in range(len(pool))]).half()
     log = {"args": vars(a) | {"images": str(a.images)}, "epochs": []}
     log["zero_shot_val"] = evaluate(model, tok, val_rows, val_px, dev, max_len, walk, amp)
     print("[val] zero-shot", log["zero_shot_val"])
 
-    dl = DataLoader(DS(tr_rows, proc), batch_size=a.bs, shuffle=True, num_workers=a.workers,
-                    collate_fn=collate, drop_last=True, pin_memory=True)
+    if a.batching == "bundle":
+        assert a.bundles, "--batching bundle 에는 --bundles train_bundles.json 이 필요"
+        bundles = {str(int(k)): v for k, v in json.load(open(a.bundles)).items()}
+        sampler = BundleBatchSampler(tr_rows, bundles, a.bs, a.seed)
+        dl = DataLoader(DS(tr_rows, proc), batch_sampler=sampler, num_workers=a.workers,
+                        collate_fn=collate, pin_memory=True)
+        sizes = [len(b) for b in sampler._make()]
+        print(f"[data] bundle batches {len(sizes)} (size mean {np.mean(sizes):.1f}, min {min(sizes)})")
+    else:
+        dl = DataLoader(DS(tr_rows, proc), batch_size=a.bs, shuffle=True, num_workers=a.workers,
+                        collate_fn=collate, drop_last=True, pin_memory=True)
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=a.lr, weight_decay=0.05)
     total = a.epochs * len(dl)
     sched = torch.optim.lr_scheduler.LambdaLR(
-        opt, lambda s: min(1.0, (s + 1) / max(1, int(0.1 * total))) * 0.5 * (1 + math.cos(math.pi * s / total)))
+        opt, lambda s: min(1.0, (s + 1) / max(1, int(0.1 * total))) * 0.5 * (1 + math.cos(math.pi * min(s, total) / total)))
     scaler = torch.amp.GradScaler(enabled=(dev.type == "cuda" and amp == torch.float16))
     rng = random.Random(a.seed)
     t0 = time.time()

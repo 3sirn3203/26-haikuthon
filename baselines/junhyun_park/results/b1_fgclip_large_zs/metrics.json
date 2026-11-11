@@ -2,7 +2,7 @@
   "exp_id": "junhyun_park/b1_fgclip_large_zs",
   "author": "junhyun_park",
   "category": "honest",
-  "method": "FG-CLIP large zero-shot (v1, bf16, walk_short_pos, max_length 77), 서버 형식 submission.zip, Modal L4 end-to-end (서버 evaluation.runner.evaluate)",
+  "method": "FG-CLIP large zero-shot (v1, bf16, walk_short_pos, max_length 77), 서버 형식 submission.zip, Modal L4에서 서버 evaluation.runner.evaluate 직접 실행 (웹 업로드·백엔드·큐 경로는 거치지 않음)",
   "stage1_model": "qihoo360/fg-clip-large",
   "stage2_model": null,
   "top_k": null,

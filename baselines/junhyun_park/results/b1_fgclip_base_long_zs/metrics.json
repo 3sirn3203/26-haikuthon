@@ -2,7 +2,7 @@
   "exp_id": "junhyun_park/b1_fgclip_base_long_zs",
   "author": "junhyun_park",
   "category": "honest",
-  "method": "FG-CLIP base zero-shot, 긴 캡션 모드 (max_length 248, walk_short_pos=False), 서버 형식 submission.zip, Modal L4 end-to-end",
+  "method": "FG-CLIP base zero-shot, 긴 캡션 모드 (max_length 248, walk_short_pos=False), 서버 형식 submission.zip, Modal L4에서 서버 evaluation.runner.evaluate 직접 실행 (웹 업로드·백엔드·큐 경로는 거치지 않음)",
   "stage1_model": "qihoo360/fg-clip-base",
   "stage2_model": null,
   "top_k": null,

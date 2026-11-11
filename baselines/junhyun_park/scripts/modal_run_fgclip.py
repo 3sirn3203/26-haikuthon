@@ -1,4 +1,4 @@
-"""웹사이트 없이 서버의 evaluation 코드를 Modal L4에서 직접 실행 (end-to-end 시간/VRAM 측정).
+"""웹사이트 없이 서버의 evaluation 코드를 Modal L4에서 직접 실행 (시간/VRAM 측정, 웹·백엔드·큐 경로는 거치지 않음).
 
 서버(2026-HAIKUTHON)의 gpu_evaluate 와 같은 이미지/데이터/호출(evaluation.runner.evaluate)을 쓴다.
 - 데이터: 서버의 숨김 테스트셋 볼륨 `<APP>-dataset` (읽기 전용, /dataset/test/test.csv)
