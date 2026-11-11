@@ -1,0 +1,52 @@
+{
+ "exp_id": "ichan_jung/b1_pickscore_zs",
+ "author": "ichan_jung",
+ "category": "honest",
+ "method": "B1 zero-shot dual encoder: PickScore v1 (CLIP-H/14 fine-tuned on Pick-a-Pic prompt-generated image preferences); cosine similarity over the full pool; pure-torch model.py, fp16, evaluated on the HAIKUTHON submission site",
+ "stage1_model": "yuvalkirstain/PickScore_v1",
+ "stage2_model": null,
+ "top_k": null,
+ "uses_train_finetune": false,
+ "uses_train_hard_negatives": false,
+ "violates_cross_query_rule": false,
+ "eval_split": "test_full",
+ "n_queries": 8000,
+ "pool_size": 15000,
+ "n_hn_in_pool": 7000,
+ "scores": {
+  "recall_at_1": 0.2343,
+  "ndcg_at_5": 0.4272,
+  "score": 0.3307
+ },
+ "scores_by_split": {
+  "public": {
+   "recall_at_1": 0.29,
+   "ndcg_at_5": 0.4579,
+   "score": 0.3739
+  },
+  "private": {
+   "recall_at_1": 0.2263,
+   "ndcg_at_5": 0.4228,
+   "score": 0.3245
+  }
+ },
+ "timing": {
+  "device": "cuda:L4",
+  "image_embeddings_cached": false,
+  "model_load_sec": null,
+  "image_encode_sec": null,
+  "image_io_wait_sec": null,
+  "text_encode_sec": null,
+  "stage1_search_sec": null,
+  "rerank_sec": 0.0,
+  "total_sec": null,
+  "note": "HAIKUTHON 제출 사이트 실측(L4 24GB, CPU 4코어, RAM 16GiB). 사이트는 load_model~predict 전체 시간만 보고하므로 구간별 시간은 null"
+ },
+ "peak_vram_gb": null,
+ "params_b": 0.986109441,
+ "artifact_size_gb": 1.973729186,
+ "git_commit": "cc403c7-dirty",
+ "date": "2026-11-11T18:10:01",
+ "result_source": "haikuthon_submission_site",
+ "site_submission_id": "888df3c7-bf94-4bb8-ada6-76b51adcd84a"
+}
