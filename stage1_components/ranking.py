@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from functools import lru_cache
 from itertools import combinations
 
+from .groups import GROUP_SIZES
 from .model import canonical, context_key, default_catalog, edge, normalized_edges, require
 
 SPATIAL = {'left_of', 'right_of', 'above', 'below'}
@@ -23,7 +24,7 @@ def masked_key(scene, holds, axis):
 
 
 def visual_context(s):
-    return (s['background']['location'], *sorted(s['rendering'].items()))
+    return (s['background']['location'], *(s['rendering'][k] for k in ('style', 'viewpoint', 'lighting')))
 
 
 def primitive_bag(s):
@@ -169,11 +170,23 @@ def group_features(group, records):
     # A four-level binding may be formed by two binary attributes.
     cols.extend(tuple(canonical(s, a) for s in group) for a in ('binding', 'count', 'relation'))
     partitions = {tuple(tuple(col).index(v) for v in col) for col in cols}
-    twos = [v for v in partitions if sorted(Counter(v).values()) == [4, 4]]
-    fours = [v for v in partitions if sorted(Counter(v).values()) == [2, 2, 2, 2]]
-    factorial = (any(len(set(zip(a, b))) == 8 for a in twos for b in fours) or
-                 any(len(set(zip(a, b, c))) == 8 for a, b, c in combinations(twos, 3)))
-    require(factorial, 'Eight scenes must form a complete 2x4 or 2x2x2 crossing')
+    size = len(group)
+    balanced = [(p, len(set(p))) for p in sorted(partitions)
+                if 1 < len(set(p)) < size and len(set(Counter(p).values())) == 1]
+
+    def crossing(labels, levels, start):
+        if levels == size:
+            return True
+        for index in range(start, len(balanced)):
+            column, width = balanced[index]
+            if size % (levels * width):
+                continue
+            joint = list(zip(labels, column))
+            if len(set(joint)) == levels * width and crossing(joint, levels * width, index + 1):
+                return True
+        return False
+
+    require(crossing([0] * size, 1, 0), f'{size} scenes must form a complete factorial crossing')
     category_var = any(len(set(col)) > 1 for col in categories)
     count_var = any(len(set(col)) > 1 for col in counts)
     contact_var = len({frozenset(r for r in rr if r[1] in CONTACT) for rr in edges}) > 1
@@ -190,9 +203,10 @@ def group_features(group, records):
 
 
 def check_group(group, catalog=None, holds=None):
-    require(len(group) == 8 and len({context_key(s, catalog) for s in group}) == 1,
-            'Expected eight neighbors with the same context and total')
-    require(len({canonical(s) for s in group}) == 8, 'Duplicate contrast scene')
+    size = len(group)
+    require(size in GROUP_SIZES and len({context_key(s, catalog) for s in group}) == 1,
+            'Expected 4, 8, or 16 neighbors with the same context and total')
+    require(len({canonical(s) for s in group}) == size, 'Duplicate contrast scene')
     for axis in ('category', 'count', 'binding', 'relation'):
         require(min(Counter(canonical(s, axis) for s in group).values()) >= 2,
                 f'Single-axis identification: {axis}')
@@ -201,11 +215,12 @@ def check_group(group, catalog=None, holds=None):
     axes = [(tuple(e['category'] for e in es), tuple(e['count'] for e in es),
              tuple(e['attributes'] for e in es), rs) for es, rs in records]
     differences = [0] * len(group)
-    for i, j in combinations(range(8), 2):
+    for i, j in combinations(range(size), 2):
         if sum(a != b for a, b in zip(axes[i], axes[j])) >= 2:
             differences[i] += 1
             differences[j] += 1
-    require(min(differences) >= 3, 'Fewer than three neighbors differ in two core axes')
+    minimum = size // 2 - 1
+    require(min(differences) >= minimum, f'Fewer than {minimum} neighbors differ in two core axes')
     if holds:
         kinds = {holds.kind(s) for s in group}
         require(len(kinds) == 1 and 'observed' not in kinds, 'Mixed or missing novelty in a test group')

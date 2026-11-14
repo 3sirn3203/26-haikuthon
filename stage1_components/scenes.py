@@ -1,17 +1,16 @@
-"""Compose eight controlled alternatives while keeping all nuisance factors fixed."""
+"""Compose controlled alternatives while keeping all nuisance factors fixed."""
 from itertools import combinations, product
 
 from .model import relation
 
 
 def make_scene(cats, counts, attrs, edges, context):
-    style, place, view = context
+    style, place, view, lighting = context
     return {'entities': [{'category': c, 'count': n, 'attributes': dict(a)}
                          for c, n, a in zip(cats, counts, attrs)],
             'relations': [relation(*r) for r in edges],
             'background': {'location': place},
-            'rendering': {'style': style, 'viewpoint': view, 'framing': 'all_target_objects_fully_visible',
-                          'lighting': 'soft_diffuse'}}
+            'rendering': {'style': style, 'viewpoint': view, 'lighting': lighting}}
 
 
 def required(catalog, cats, edges):
@@ -94,8 +93,8 @@ def distinguish_repeats(g, cats, fixed, style, test, novel_field):
     return True
 
 
-def compose(g, base_cats, relations, n, kind, repeated, focus=None):
-    """A binary relation, quantity, object substitution or attribute binding is one factor."""
+def compose(g, base_cats, relations, n, kind, repeated, focus=None, group_size=8, context=None, variation=None):
+    """Cross attribute, quantity and relation factors; keep object categories fixed."""
     test = kind != 'observed'
     need_binding = kind in ('binding', 'both')
     cats = list(base_cats)
@@ -105,7 +104,6 @@ def compose(g, base_cats, relations, n, kind, repeated, focus=None):
         cats.append(cats[1])
     if (len(set(cats)) < len(cats)) != repeated:
         return None
-    adjustable = []
     if need_binding and not any(c in g.holdouts.binding_pairs for c in cats):
         if len(cats) >= min(4, n):
             return None
@@ -119,10 +117,12 @@ def compose(g, base_cats, relations, n, kind, repeated, focus=None):
         cats.append(focus)
     all_edges = set(r for variant in relations for r in variant)
     fixed, locked = required(g.catalog, cats, all_edges)
-    # A matched pair of same-domain context objects can act as a third factor.
+    # Optional objects belong to the shared scene template, never a variation axis.
     room = len(cats) < min(n, 4)
     base_counts = count_options(g.catalog, [cats], n, locked)
-    prop_probability = .42 if n == 3 and len(base_counts) >= 2 else .70
+    prop_probability = .55 if n == 3 and len(base_counts) >= 2 else .85
+    if variation == 'count_variation' and n == 3 and len(base_counts) >= 2:
+        prop_probability = 0
     if room and (not base_counts or g.rng.random() < prop_probability):
         prop = None
         if need_binding and g.rng.random() < .36:
@@ -135,35 +135,21 @@ def compose(g, base_cats, relations, n, kind, repeated, focus=None):
             prop = g.extra(cats, partners)
         if prop is None:
             prop = g.extra(cats)
-            if prop:
-                adjustable.append(len(cats))
         if prop:
             cats.append(prop)
             fixed.append({})
     if len(cats) > n or len(cats) > 4:
         return None
     variants = [tuple(cats)]
-    if adjustable and g.rng.random() < .80:
-        slot = adjustable[0]
-        same_domain = g.domains[g.catalog.entities[cats[slot]]['domain']]
-        alt = g.extra(cats, same_domain)
-        if alt:
-            changed = list(cats)
-            changed[slot] = alt
-            variants.append(tuple(changed))
     profiles = count_options(g.catalog, variants, n, locked)
     if not profiles:
         return None
     relation_bits = {1: 0, 2: 1, 4: 2}[len(relations)]
-    spare = 3 - relation_bits - int(need_binding)
+    spare = {4: 2, 8: 3, 16: 4}[group_size] - relation_bits - int(need_binding)
+    if spare < 0:
+        return None
     # Give each row both a foil for its novelty and foils varying other core axes.
-    use_category = len(variants) == 2 and spare > 0
     use_count = spare > 0 and len(profiles) >= 2 and (not relation_bits or g.rng.random() < .93)
-    if use_category and use_count and spare < 2:
-        use_category = g.rng.random() < .47
-        use_count = not use_category
-    if not use_category:
-        variants = variants[:1]
     if not relation_bits and not use_count:
         return None
     if use_count:
@@ -171,7 +157,7 @@ def compose(g, base_cats, relations, n, kind, repeated, focus=None):
         profiles = g.rng.choice(permutations) if permutations else g.rng.sample(profiles, 2)
     else:
         profiles = [g.rng.choice(profiles)]
-    common_bits = spare - int(use_category) - int(use_count)
+    common_bits = spare - int(use_count)
     if common_bits < 0:
         return None
     styles = None
@@ -180,11 +166,11 @@ def compose(g, base_cats, relations, n, kind, repeated, focus=None):
                   if any(c in g.holdouts.binding_pairs and
                          g.holdouts.binding_pairs[c][0] in g.catalog.attributes(c, style)
                          for c in cats)]
-    context = g.context(set().union(*map(set, variants)), all_edges, styles)
+    context = context or g.context(set().union(*map(set, variants)), all_edges, styles)
     if not context:
         return None
     style = context[0]
-    variable_slots = set(adjustable) if use_category else set()
+    variable_slots = set()
     eligible = [(c, g.holdouts.binding_pairs[c][0]) for i, c in enumerate(cats)
                 if i not in variable_slots and c in g.holdouts.binding_pairs]
     novel_field = g.rng.choice(eligible) if need_binding and eligible else None
@@ -200,21 +186,26 @@ def compose(g, base_cats, relations, n, kind, repeated, focus=None):
         factors.append(factor)
         fields.update(factor[0])
         used_slots.update(i for i, a in fields)
-    for _ in range(common_bits):
-        factor = binding_factor(g, cats, fixed, fields, variable_slots, style, test, False, used_slots)
-        if not factor:
-            # A 2x4 grid is useful for objects with a single readable axis.
-            if common_bits != 2 or len(factors) != 1 or need_binding:
-                return None
-            factor = binding_factor(g, cats, fixed, set(), variable_slots, style, test, False, set(), levels=4)
-            if not factor:
-                return None
-            factors.clear()
-            fields.clear()
-        factors.append(factor)
+    def common_factors(bits, occupied, used):
+        if not bits:
+            return []
+        for width, levels in ((1, 2), (2, 4)):
+            if width > bits:
+                continue
+            factor = binding_factor(g, cats, fixed, occupied, variable_slots, style, test, False, used, levels)
+            if factor:
+                rest = common_factors(bits - width, occupied | factor[0].keys(), used | {i for i, _ in factor[0]})
+                if rest is not None:
+                    return [factor] + rest
+        return None
+
+    common = common_factors(common_bits, fields, used_slots)
+    if common is None:
+        return None
+    factors.extend(common)
+    for factor in common:
         fields.update(factor[0])
-        used_slots.update(i for i, a in fields)
-    # Supply useful common primitive observations even for train grids with count/category factors.
+    # Supply useful common primitive observations even for train grids with count factors.
     if (not test and g.rng.random() < .83) or (test and not fields):
         choices = [((i, a), vs) for (i, a), vs in palettes(g, cats, fixed, variable_slots, style, test).items()
                    if vs and (i, a) not in fields and len(fixed[i]) + sum(j == i for j, _ in fields) < 3]

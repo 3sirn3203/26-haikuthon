@@ -4203,32 +4203,28 @@ relations:
       en: to the left of
     kind: spatial
     arity: 2
-    definition: 관찰자 기준 주체의 가시 영역이 대상의 가시 영역보다 완전히 왼쪽에 있다.
+    definition: 주체의 가시 영역이 대상의 가시 영역보다 완전히 왼쪽에 있다.
     role_selectors:
       subject:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: core
     inverse: right_of
-    reference_frame: viewer
   right_of:
     label:
       ko: 오른쪽에 있다
       en: to the right of
     kind: spatial
     arity: 2
-    definition: 관찰자 기준 주체의 가시 영역이 대상의 가시 영역보다 완전히 오른쪽에 있다.
+    definition: 주체의 가시 영역이 대상의 가시 영역보다 완전히 오른쪽에 있다.
     role_selectors:
       subject:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: core
     inverse: left_of
-    reference_frame: viewer
   'on':
     label:
       ko: 표면에 놓여 있다
@@ -4242,7 +4238,6 @@ relations:
       object:
         capabilities_any:
         - support_surface
-    default_scope: all_pairs
     review_tier: core
   inside:
     label:
@@ -4257,7 +4252,6 @@ relations:
       object:
         capabilities_any:
         - container
-    default_scope: all_pairs
     review_tier: core
     requirements:
     - visible_contents
@@ -4279,7 +4273,6 @@ relations:
         - chair
         - bench
         - shelf
-    default_scope: all_pairs
     review_tier: review_required
   above:
     label:
@@ -4287,48 +4280,42 @@ relations:
       en: above
     kind: spatial
     arity: 2
-    definition: 관찰자 기준 화면의 세로 방향 관계. 표면 접촉·지지나 중력 방향을 자동으로 함의하지 않는다.
+    definition: 화면의 세로 방향 관계. 표면 접촉·지지나 중력 방향을 자동으로 함의하지 않는다.
     role_selectors:
       subject:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: core
     inverse: below
-    reference_frame: viewer
   below:
     label:
       ko: 화면상 아래쪽에 있다
       en: below
     kind: spatial
     arity: 2
-    definition: 관찰자 기준 화면의 세로 방향 관계. 표면 접촉·지지나 중력 방향을 자동으로 함의하지 않는다.
+    definition: 화면의 세로 방향 관계. 표면 접촉·지지나 중력 방향을 자동으로 함의하지 않는다.
     role_selectors:
       subject:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: core
     inverse: above
-    reference_frame: viewer
   in_front_of:
     label:
       ko: 앞에 있다
       en: in front of
     kind: spatial
     arity: 2
-    definition: 관찰자에서 더 가깝거나 먼 깊이 관계. 화면 위아래와 구별하며 핵심 개체의 판별을 가리지 않는다.
+    definition: 앞뒤 깊이 관계. 화면 위아래와 구별하며 핵심 개체의 판별을 가리지 않는다.
     role_selectors:
       subject:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     inverse: behind
-    reference_frame: viewer
     requirements:
     - depth_cues_visible
     - all_arguments_visible
@@ -4338,16 +4325,14 @@ relations:
       en: behind
     kind: spatial
     arity: 2
-    definition: 관찰자에서 더 가깝거나 먼 깊이 관계. 화면 위아래와 구별하며 핵심 개체의 판별을 가리지 않는다.
+    definition: 앞뒤 깊이 관계. 화면 위아래와 구별하며 핵심 개체의 판별을 가리지 않는다.
     role_selectors:
       subject:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     inverse: in_front_of
-    reference_frame: viewer
     requirements:
     - depth_cues_visible
     - all_arguments_visible
@@ -4363,7 +4348,6 @@ relations:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: core
     symmetric: true
   touching:
@@ -4378,7 +4362,6 @@ relations:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     symmetric: true
   leaning_against:
@@ -4395,7 +4378,6 @@ relations:
       object:
         capabilities_any:
         - leaning_support
-    default_scope: all_pairs
     review_tier: review_required
   hanging_from:
     label:
@@ -4411,7 +4393,6 @@ relations:
       object:
         capabilities_any:
         - hanging_support
-    default_scope: all_pairs
     review_tier: review_required
   larger_than:
     label:
@@ -4425,7 +4406,6 @@ relations:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     inverse: smaller_than
     requirements:
@@ -4443,7 +4423,6 @@ relations:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     inverse: larger_than
     requirements:
@@ -4461,7 +4440,6 @@ relations:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     inverse: shorter_than
     requirements:
@@ -4479,7 +4457,6 @@ relations:
         any_entity: true
       object:
         any_entity: true
-    default_scope: all_pairs
     review_tier: review_required
     inverse: taller_than
     requirements:
@@ -4499,7 +4476,6 @@ relations:
       object:
         capabilities_any:
         - portable
-    default_scope: all_pairs
     review_tier: core
     requirements:
     - singleton_arguments
@@ -4518,7 +4494,6 @@ relations:
       object:
         capabilities_any:
         - wearable_core
-    default_scope: all_pairs
     review_tier: core
     requirements:
     - singleton_arguments
@@ -4537,7 +4512,6 @@ relations:
       object:
         capabilities_any:
         - rideable
-    default_scope: all_pairs
     review_tier: core
     requirements:
     - singleton_arguments
@@ -4557,7 +4531,6 @@ relations:
       object:
         capabilities_any:
         - pushable
-    default_scope: all_pairs
     review_tier: review_required
     requirements:
     - singleton_arguments
@@ -4576,7 +4549,6 @@ relations:
       object:
         capabilities_any:
         - pullable
-    default_scope: all_pairs
     review_tier: review_required
     requirements:
     - singleton_arguments
@@ -4595,7 +4567,6 @@ relations:
       object:
         capabilities_any:
         - readable
-    default_scope: all_pairs
     review_tier: review_required
     requirements:
     - singleton_arguments
@@ -4616,7 +4587,6 @@ relations:
         capabilities_any:
         - human
         - animal
-    default_scope: all_pairs
     review_tier: review_required
     requirements:
     - singleton_arguments
@@ -4635,7 +4605,6 @@ relations:
       object:
         capabilities_any:
         - instrument
-    default_scope: all_pairs
     review_tier: review_required
     requirements:
     - singleton_arguments
@@ -4646,7 +4615,7 @@ relations:
       en: between
     kind: spatial
     arity: 3
-    definition: 관찰자 기준 가로 순서가 reference_a–subject–reference_b 또는 그 역순이다. 세 역할은 서로
+    definition: 가로 순서가 reference_a–subject–reference_b 또는 그 역순이다. 세 역할은 서로
       다른 단일 entity ID를 참조한다.
     role_selectors:
       subject:
@@ -4655,8 +4624,6 @@ relations:
         any_entity: true
       reference_b:
         any_entity: true
-    scope: singleton_roles
-    reference_frame: viewer
     requirements:
     - singleton_arguments
     - distinct_role_ids
@@ -5028,10 +4995,6 @@ viewpoints:
   rear:
     ko: 뒤쪽 시점
     en: rear view
-framing:
-  all_target_objects_fully_visible:
-    ko: 모든 지정 개체가 화면 안에 완전히 보임
-    en: all specified entities fully visible within the frame
 lighting:
   soft_diffuse:
     ko: 부드러운 확산광
@@ -5039,6 +5002,7 @@ lighting:
   direct_sunlight:
     ko: 직사광
     en: direct sunlight
+    settings: [outdoor]
   low_light:
     ko: 어두운 조명
     en: low lighting
@@ -5051,6 +5015,7 @@ lighting:
   warm_indoor:
     ko: 따뜻한 실내 조명
     en: warm indoor lighting
+    settings: [indoor]
 active:
   attributes:
   - color
@@ -5078,6 +5043,9 @@ active:
     - deflated
   lighting:
   - soft_diffuse
+  - direct_sunlight
+  - side_light
+  - warm_indoor
   viewpoints:
   - front
   - oblique

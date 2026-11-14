@@ -49,10 +49,23 @@ def edge(a, p, b):
 
 
 def relation(a, p, b):
-    r = {'subject': a, 'predicate': p, 'object': b, 'scope': 'all_pairs'}
-    if p in ('left_of', 'right_of', 'above', 'below'):
-        r['reference_frame'] = 'viewer'
-    return r
+    return {'subject': a, 'predicate': p, 'object': b}
+
+
+def normalize_scene(scene):
+    """Read older files without retaining retired framing/relationship metadata."""
+    from copy import deepcopy
+    result = deepcopy(scene)
+    if not isinstance(result, dict):
+        return result
+    if isinstance(result.get('rendering'), dict):
+        result['rendering'].pop('framing', None)
+    if isinstance(result.get('relations'), list):
+        for item in result['relations']:
+            if isinstance(item, dict):
+                item.pop('scope', None)
+                item.pop('reference_frame', None)
+    return result
 
 
 def normalized_edges(scene):
@@ -108,6 +121,12 @@ def canonical(scene, axis=None):
     return best
 
 
+def scene_key(scene):
+    """Complete scene identity, including the explicitly requested visual context."""
+    return (canonical(scene), scene['background']['location'],
+            *(scene['rendering'][k] for k in ('style', 'viewpoint', 'lighting')))
+
+
 @lru_cache(maxsize=1)
 def default_catalog():
     return Catalog()
@@ -118,7 +137,8 @@ def context_key(scene, catalog=None):
     # A foil may replace one object by another from its domain. This key is
     # reconstructible from visible components and survives entity reordering.
     return (tuple(sorted(catalog.entities[e['category']]['domain'] for e in scene['entities'])), total(scene),
-            json.dumps(scene['background'], sort_keys=True), json.dumps(scene['rendering'], sort_keys=True))
+            json.dumps(scene['background'], sort_keys=True),
+            tuple(scene['rendering'][k] for k in ('style', 'viewpoint', 'lighting')))
 
 
 def changed_axes(first, second):
@@ -172,6 +192,11 @@ class Catalog:
         return {a: vv for a, vv in values.items() if vv and
                 not (a == 'color' and style in self.data['style_groups']['monochrome']) and
                 not (a == 'material' and style is not None and style not in self.data['style_groups']['material_readable_core'])}
+
+    def lighting_options(self, location):
+        setting = self.data['backgrounds'][location]['setting']
+        return [name for name in self.active['lighting']
+                if setting in self.data['lighting'][name].get('settings', ('indoor', 'outdoor'))]
 
     @lru_cache(maxsize=None)
     def ancestors(self, category):
@@ -235,17 +260,23 @@ class Catalog:
         return True
 
     def validate(self, scene, maximum=6):
-        require(set(scene) <= {'prompt_id', 'entities', 'relations', 'background', 'rendering'}, 'Unexpected scene metadata')
+        require(set(scene) <= {'prompt_id', 'group_id', 'cluster_id', 'is_query', 'entities', 'relations', 'background', 'rendering'}, 'Unexpected scene metadata')
+        if 'is_query' in scene:
+            require(type(scene['is_query']) is bool, 'is_query must be a boolean')
+        if 'group_id' in scene:
+            require(type(scene['group_id']) is int and scene['group_id'] >= 0, 'group_id must be a nonnegative integer')
+        if scene.get('cluster_id') is not None:
+            require(type(scene['cluster_id']) is int and scene['cluster_id'] >= 0,
+                    'cluster_id must be null or a nonnegative integer')
         require({'entities', 'relations', 'background', 'rendering'} <= scene.keys(), 'Missing component fields')
         entities = scene['entities']
         require(isinstance(entities, list) and 2 <= len(entities) <= 4, 'Expected 2–4 entity groups')
         require(2 <= total(scene) <= maximum, 'Scene total count out of range')
         cats = []
         render = scene['rendering']
-        require(set(render) == {'style', 'viewpoint', 'framing', 'lighting'}, 'Rendering fields')
+        require(set(render) == {'style', 'viewpoint', 'lighting'}, 'Rendering fields')
         require(render['style'] in self.data['styles'], 'Unknown style')
         require(render['viewpoint'] in self.active['viewpoints'], 'Inactive viewpoint')
-        require(render['framing'] == 'all_target_objects_fully_visible', 'Framing contract')
         require(render['lighting'] in self.active['lighting'], 'Inactive lighting')
         for e in entities:
             require(set(e) == {'category', 'count', 'attributes'}, 'Entity fields')
@@ -266,17 +297,13 @@ class Catalog:
         require(set(scene['background']) == {'location'}, 'Background fields')
         location = scene['background']['location']
         require(all(location in self.contexts(c) for c in cats), 'Background incompatibility')
+        require(render['lighting'] in self.lighting_options(location), 'Lighting/background incompatibility')
         require(1 <= len(scene['relations']) <= 4, 'Relation count')
         for r in scene['relations']:
-            require(set(r) <= {'subject', 'predicate', 'object', 'scope', 'reference_frame'}, 'Relation fields')
+            require(set(r) == {'subject', 'predicate', 'object'}, 'Relation fields')
             a, p, b = r['subject'], r['predicate'], r['object']
             require(type(a) is int and type(b) is int and 0 <= a < len(entities) and 0 <= b < len(entities) and a != b, 'Invalid relation reference')
-            require(r['scope'] == 'all_pairs', 'Relation scope must be all_pairs')
             require(self.legal_relation(cats[a], p, cats[b]), 'Illegal relation roles')
-            if p in ('left_of', 'right_of', 'above', 'below'):
-                require(r.get('reference_frame') == 'viewer', 'Spatial reference frame')
-            else:
-                require('reference_frame' not in r, 'Unexpected reference frame')
             if p in ('holding', 'wearing', 'riding'):
                 require(entities[a]['count'] == entities[b]['count'] == 1, 'Action arguments must be singleton')
             if p == 'riding':

@@ -4,17 +4,42 @@ from itertools import combinations
 import random
 
 from .coverage import diversify_train
+from .groups import (assign_cluster_ids, assign_group_ids, cluster_plan, contrast_plan,
+                     inventory_limit, repeated_indices)
 from .holdouts import ALTERNATIVE, Holdouts, legal_pairs, quotas
-from .model import ROOT, Catalog, canonical, context_key, edge, family, inventory, read_yaml, require, total
+from .lighting import lighting_weights
+from .model import ROOT, Catalog, edge, family, inventory, read_yaml, require, scene_key, total
 from .ranking import Description, check_group, gallery_signature, visual_context
 from .scenes import compose, count_options, make_scene, required
+from .queries import mark_queries, query_count, query_fraction
 
 
 class Generator:
     def __init__(self, seed=None, catalog=None, policy=None):
         self.catalog = catalog or Catalog()
         self.policy = policy or read_yaml(ROOT / 'policy.yaml')
+        self.lighting_weights = lighting_weights(self.policy, self.catalog)
         self.seed = self.policy['seed'] if seed is None else seed
+        # Reject impossible allocations before doing any scene generation.
+        self.plans = {split: contrast_plan(self.policy, split) for split in ('train', 'test')}
+        self.clusters = cluster_plan(self.policy, self.plans['test'])
+        fraction = query_fraction(self.policy)
+        if fraction is not None:
+            for size in {size for _, _, size in self.plans['test']}:
+                query_count(size, fraction)
+        for split in ('train', 'test'):
+            inventory_limit(self.policy, split)
+        test_rows = sum(self.policy.get('test_baseline_counts', {}).values()) + sum(self.policy['test_contrast_counts'].values())
+        if fraction is not None:
+            query_count(test_rows, fraction)
+        for n, _, sizes in self.clusters:
+            require(sum(sizes) <= int(test_rows * self.policy['ranking']['max_category_fraction']),
+                    'Test cluster exceeds the per-category frequency cap; reduce max_size or adjust the cap')
+            require(sum(sizes) <= inventory_limit(self.policy, 'test'),
+                    'Test cluster exceeds max_inventory_rows.test')
+        if self.clusters:
+            require(self.policy['ranking']['minimum_distinct_test_inventories'] <= len(self.clusters),
+                    'minimum_distinct_test_inventories exceeds the number of test clusters')
         self.rng = random.Random(self.seed)
         self.cats = tuple(self.catalog.entities)
         self.domains = defaultdict(list)
@@ -33,17 +58,21 @@ class Generator:
     def reset(self, split):
         self.split = split
         self.size = (sum(self.policy['train_counts'].values()) if split == 'train'
-                     else sum(self.policy['test_baseline_counts'].values()) + sum(self.policy['test_contrast_counts'].values()))
+                     else sum(self.policy.get('test_baseline_counts', {}).values()) + sum(self.policy['test_contrast_counts'].values()))
         self.freq = Counter()
         self.domain_freq = Counter()
         self.style_freq = Counter()
+        self.lighting_freq = Counter()
+        self.lighting_rng = random.Random(f'{self.seed}/{split}/lighting')
         self.family_freq = Counter()
         self.inventory_freq = Counter()
-        self.group_keys = set()
-        self.gallery = defaultdict(set)
+        self.train_group_metrics = Counter()
+        self.next_unit_id = 0
+        self.gallery = defaultdict(dict)
         self.rejects = Counter()
         self.low = self.policy['minimum_category_scenes'][split]
         self.rules = self.policy['ranking']
+        self.group_size = 1
 
     def weights(self, targets, observed):
         count = sum(observed.values()) + 48
@@ -59,7 +88,7 @@ class Generator:
 
     def extra(self, cats, pool=None):
         options = [c for c in (self.cats if pool is None else pool) if c not in cats
-                   and self.freq[c] + 4 <= self.max_count(c) and self.catalog.compatible((*cats, c))]
+                   and self.freq[c] + self.group_size <= self.max_count(c) and self.catalog.compatible((*cats, c))]
         if not options:
             return None
         domain_targets = self.policy['domain_weights']
@@ -76,7 +105,8 @@ class Generator:
         common = set.intersection(*(set(self.catalog.contexts(c)) for c in cats))
         if any(p == 'riding' for a, p, b in edges):
             common.intersection_update(self.catalog.rules['riding_backgrounds'])
-        places = sorted(common)
+        places = sorted(p for p in common if any(name in self.lighting_weights
+                                                for name in self.catalog.lighting_options(p)))
         if not places:
             return None
         targets = self.policy['style_weights']
@@ -87,7 +117,10 @@ class Generator:
         style = self.rng.choices(styles, [weights[s] for s in styles])[0]
         location = self.rng.choices(places, [.3 if p == 'studio' else 1 for p in places])[0]
         viewpoint = 'overhead' if any(p == 'inside' for a, p, b in edges) else self.rng.choice(self.catalog.active['viewpoints'])
-        return style, location, viewpoint
+        available = [name for name in self.lighting_weights if name in self.catalog.lighting_options(location)]
+        light_weights = dict(zip(self.lighting_weights, self.weights(self.lighting_weights, self.lighting_freq)))
+        lighting = self.lighting_rng.choices(available, [light_weights[name] for name in available])[0]
+        return style, location, viewpoint, lighting
 
     def common_values(self, c, axis, style, test):
         return [v for v in self.catalog.attributes(c, style).get(axis, ())
@@ -110,14 +143,8 @@ class Generator:
                 require(occurrences.keys() <= self.train_categories, 'test category absent from train')
                 require(all(self.baselines.isdisjoint(self.footprints(cs)) for cs in inventories), 'reserved easy inventory')
             if hard:
-                cap = self.rules['max_inventory_rows']
+                cap = inventory_limit(self.policy, self.split)
                 require(all(self.inventory_freq[cs] + n <= cap for cs, n in inventories.items()), 'inventory cap')
-            key = context_key(rows[0], self.catalog)
-            require(key not in self.group_keys, 'group context in use')
-            render = visual_context(rows[0])
-            counts = {gallery_signature(s, self.catalog) for s in rows}
-            # Other groups in the same visual context must not introduce an incidental positive.
-            require(not any(a <= b or b <= a for a in counts for b in self.gallery[render]), 'gallery inventory collision')
             keys = set()
             for s in rows:
                 self.catalog.validate(s, 6 if test else 4)
@@ -126,12 +153,26 @@ class Generator:
                     bs, rs = self.catalog.atoms(s)
                     require(all(self.holdouts.binding(*b) or b in self.train_bindings for b in bs), 'unobserved common binding')
                     require(all(self.holdouts.relational(*r) or r in self.train_relations for r in rs), 'unobserved common relation')
-                k = canonical(s)
-                require(k not in keys and k not in self.seen, 'duplicate core')
+                k = scene_key(s)
+                require(k not in keys and k not in self.seen, 'duplicate scene')
                 keys.add(k)
+            descriptions = [Description(s, self.catalog) for s in rows]
+            # Shared inventories are allowed, but every explicit query must
+            # contradict every other candidate in at least one visible fact.
+            for s, description in zip(rows, descriptions):
+                signature = gallery_signature(s, self.catalog)
+                for entries in self.gallery[visual_context(s)].values():
+                    for other_signature, other in entries:
+                        if signature <= other_signature or other_signature <= signature:
+                            require(not (description.could_match(other) or other.could_match(description)),
+                                    'gallery semantic collision')
             if hard:
-                check_group(rows, self.catalog, self.holdouts if test else None)
-                descriptions = [Description(s, self.catalog) for s in rows]
+                metrics = check_group(rows, self.catalog, self.holdouts if test else None)
+                if not test:
+                    simple = 'one_object_attribute_and_direction'
+                    maximum = int(len(self.plans['train']) * self.rules['max_' + simple])
+                    require(self.train_group_metrics[simple] + metrics[simple] <= maximum,
+                            'train simple-group cap')
                 require(not any(a.could_match(b) or b.could_match(a) for a, b in combinations(descriptions, 2)),
                         'two descriptions can match the same image')
         except ValueError as exc:
@@ -141,27 +182,34 @@ class Generator:
         return True
 
     def record(self, rows, hard, add):
-        key = context_key(rows[0], self.catalog)
         render = visual_context(rows[0])
-        counts = {gallery_signature(s, self.catalog) for s in rows}
-        keys = {canonical(s) for s in rows}
+        keys = {scene_key(s) for s in rows}
         if add:
+            identifier = self.next_unit_id
+            self.next_unit_id += 1
+            for row in rows:
+                row['group_id'] = identifier
             self.seen.update(keys)
-            self.group_keys.add(key)
-            self.gallery[render].update(counts)
+            self.gallery[render][identifier] = [(gallery_signature(s, self.catalog), Description(s, self.catalog)) for s in rows]
         else:
             self.seen.difference_update(keys)
-            self.group_keys.remove(key)
-            self.gallery[render].difference_update(counts)
+            del self.gallery[render][rows[0]['group_id']]
         sign = 1 if add else -1
+        if hard and self.split == 'train':
+            for name, value in check_group(rows, self.catalog).items():
+                self.train_group_metrics[name] += sign * value
         occurrences = Counter(c for s in rows for c in inventory(s))
         for c, n in occurrences.items():
             self.freq[c] += sign * n
             self.domain_freq[self.catalog.entities[c]['domain']] += sign * n
         for s in rows:
             if hard:
-                self.inventory_freq[inventory(s)] += sign
+                key = inventory(s)
+                self.inventory_freq[key] += sign
+                if not self.inventory_freq[key]:
+                    del self.inventory_freq[key]
             self.style_freq[s['rendering']['style']] += sign
+            self.lighting_freq[s['rendering']['lighting']] += sign
             self.family_freq[family(s['relations'][0]['predicate'])] += sign
 
     def prepare_bank(self, test):
@@ -205,11 +253,16 @@ class Generator:
             options = direct if direct and self.rng.random() < .75 else compatible
             if not options:
                 return None
+        # Large candidate pools can exhaust the useful grids of the highest-
+        # priority pair. Explore alternatives instead of repeatedly selecting
+        # a rare pair that cannot supply enough attribute levels for 16 rows.
+        if self.split == 'test' and self.rng.random() < .15:
+            return self.rng.choice(options)
         sample = self.rng.sample(options, min(16, len(options)))
         def priority(r):
             a, b = r[:2]
             return (int(focus is not None and focus in (a, b)),
-                    -max(0, self.freq[a] + 8 - self.max_count(a), self.freq[b] + 8 - self.max_count(b)),
+                    -max(0, self.freq[a] + self.group_size - self.max_count(a), self.freq[b] + self.group_size - self.max_count(b)),
                     max(0, self.low - self.freq[a]) + max(0, self.low - self.freq[b]),
                     -self.inventory_freq[frozenset((a, b))] if self.rng.random() < .7 else 0)
         return max(sample, key=priority)
@@ -226,7 +279,8 @@ class Generator:
         if f == 'next_to' and (held_r or n == 2):
             f = self.rng.choice(['on', 'inside', 'holding', 'riding'])
         options = self.fixed[f] if fixed else bank[f]
-        needs_anchor = kind in ('binding', 'both') and (n == 2 or (repeated and n == 3))
+        needs_anchor = kind in ('binding', 'both') and (
+            n == 2 or (n == 3 and (repeated or (focus is not None and focus not in self.holdouts.binding_pairs))))
         teach_anchor = not test and n == 2 and self.rng.random() < .85
         if (needs_anchor or teach_anchor) and not fixed:
             options = self.anchored.get(('novel' if held_r else 'known', f), ())
@@ -328,7 +382,10 @@ class Generator:
 
     def baselines_for_split(self, test):
         rows = []
-        config = self.policy[self.split + '_baseline_counts']
+        # Old policies remain readable; current policies generate no singletons.
+        config = self.policy.get(self.split + '_baseline_counts', {})
+        if not any(config.values()):
+            return rows
         primitives = sorted({(a, v) for c, a, v in self.holdouts.bindings})
         if test:
             novel_pairs = {frozenset((a, b)) for a, b, p, q in self.holdouts.relation_pairs}
@@ -358,18 +415,17 @@ class Generator:
         return rows
 
     def contrast(self, test):
-        amounts = (self.policy['test_contrast_counts'] if test else
-                   {n: count - self.policy['train_baseline_counts'][n] for n, count in self.policy['train_counts'].items()})
-        schedule = []
-        for n, amount in amounts.items():
-            kinds = quotas(amount // 8, self.policy['novelty_weights']) if test else {'observed': amount // 8}
-            block = [(n, kind) for kind, count in kinds.items() for _ in range(count)]
-            self.rng.shuffle(block)
-            schedule.extend(block)
-        repeats = set(self.rng.sample([i for i, (n, _) in enumerate(schedule) if n >= 3],
-                                      round(len(schedule) * self.policy['repeated_category_fraction'])))
+        if test and self.clusters:
+            from .clusters import generate_clusters
+            return generate_clusters(self)
+        schedule = list(self.plans[self.split])
+        self.rng.shuffle(schedule)
+        # Keep small-count scenes first, as in the original generator.
+        schedule.sort(key=lambda item: item[0])
+        repeats = repeated_indices(schedule, self.policy['repeated_category_fraction'], self.rng)
         rows = []
-        for i, (n, kind) in enumerate(schedule):
+        for i, (n, kind, group_size) in enumerate(schedule):
+            self.group_size = group_size
             repeated = i in repeats
             previous = self.rejects.copy()
             missing = [c for c in self.cats if self.freq[c] < self.low]
@@ -381,12 +437,12 @@ class Generator:
                 layout = self.layout(n, kind, repeated, focus)
                 if layout is None:
                     continue
-                group = compose(self, *layout, n, kind, repeated, focus)
+                group = compose(self, *layout, n, kind, repeated, focus, group_size)
                 if group and self.accept(group, kind, True):
                     rows.extend(group)
                     break
             else:
-                raise ValueError(f'Cannot allocate {self.split} grid {i} (n={n}, {kind}, repeat={repeated}): {(self.rejects-previous).most_common(8)}')
+                raise ValueError(f'Cannot allocate {self.split} grid {i} (n={n}, size={group_size}, {kind}, repeat={repeated}): {(self.rejects-previous).most_common(8)}')
             if (i+1) % 100 == 0 or i+1 == len(schedule):
                 print(f'{self.split}: {i+1}/{len(schedule)} contrast groups; {len(self.inventory_freq)} distinct inventories', flush=True)
         missing = {c: self.freq[c] for c in self.cats if self.freq[c] < self.low}
@@ -395,18 +451,25 @@ class Generator:
 
     def run(self):
         splits = []
+        next_group_id = 0
         for split in ('train', 'test'):
             test = split == 'test'
             self.reset(split)
             self.prepare_bank(test)
             rows = self.baselines_for_split(test)
-            print(f'{split}: {len(rows)} baseline queries', flush=True)
+            if rows:
+                print(f'{split}: {len(rows)} baseline scenes', flush=True)
             rows.extend(self.contrast(test))
             if not test:
                 self.train_bindings, self.train_relations = diversify_train(self, rows)
                 self.train_categories = set().union(*(inventory(s) for s in rows))
             self.rng.shuffle(rows)
+            next_group_id = assign_group_ids(rows, self.catalog, next_group_id)
+            assign_cluster_ids(rows)
             for i, row in enumerate(rows):
                 row['prompt_id'] = f'{i:04d}'
+                row.setdefault('cluster_id', None)
+            if test:
+                mark_queries(rows, self.policy, self.catalog, self.holdouts, self.seed)
             splits.append(rows)
         return tuple(splits)

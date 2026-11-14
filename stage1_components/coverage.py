@@ -66,12 +66,13 @@ def replacement(g, a, b, donor):
     x, p, y = g.rng.choice(matched or choices)
     if hard:
         edges = (((0, p, 1),), ((0, ALTERNATIVE[p], 1),))
-        return compose(g, (x, y), edges, n, 'observed', False)
+        return compose(g, (x, y), edges, n, 'observed', False, group_size=len(donor))
     row = g.baseline_scene((x, y), p, n, 'observed')
     return [row] if row else None
 
 
 def fit_replacement(g, focus, partners, donor):
+    g.group_size = len(donor)
     for partner in partners:
         if g.freq[partner] + len(donor) > g.max_count(partner):
             continue
@@ -95,7 +96,7 @@ def diversify_train(generator, rows):
     min_units, min_partners = policy['minimum_units'], policy['minimum_relation_partners']
     slots = defaultdict(list)
     for i, s in enumerate(rows):
-        slots[context_key(s, g.catalog)].append(i)
+        slots[s.get('group_id', context_key(s, g.catalog))].append(i)
     indices = list(slots.values())
     units = [[rows[i] for i in group] for group in indices]
     facts = [unit_atoms(g.catalog, unit) for unit in units]

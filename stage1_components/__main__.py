@@ -1,4 +1,4 @@
-"""python3 -m stage1_components {generate,validate} [--seed N]."""
+"""python3 -m stage1_components {generate,validate} [--id ID] [--seed N]."""
 import argparse
 import json
 import os
@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 
 from .generator import Generator
+from .files import check_output_directory, component_names, default_output_id
 from .model import ROOT, read_yaml, require
 from .validation import read_jsonl, validate
 
@@ -17,18 +18,26 @@ def encode(rows):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=('generate', 'validate'))
-    parser.add_argument('--seed', type=int, default=read_yaml(ROOT / 'policy.yaml')['seed'])
+    parser.add_argument('--config', type=Path, default=ROOT / 'policy.yaml', help='Stage1 policy YAML')
+    parser.add_argument('--seed', type=int, default=None)
+    parser.add_argument('--id', dest='output_id', help='filename suffix; default: invocation time in KST, YYYYMMDDHHMM')
     parser.add_argument('--output-dir', type=Path, default=ROOT.parent / 'outputs_stage1')
     parser.add_argument('--check-reproducibility', action='store_true', help='validate: regenerate in memory and compare both JSONL byte streams')
     args = parser.parse_args()
     try:
-        names = ('train_components.jsonl', 'test_components.jsonl')
+        identifier = default_output_id() if args.output_id is None else args.output_id
+        names = component_names(identifier)
+        policy = read_yaml(args.config)
+        seed = policy['seed'] if args.seed is None else args.seed
+        print(f'Output id: {identifier}', flush=True)
+        if args.output_dir.exists():
+            check_output_directory(args.output_dir)
         if args.command == 'generate':
-            generator = Generator(args.seed)
+            generator = Generator(seed, policy=policy)
             train, test = generator.run()
-            validate(train, test, generator.catalog, generator.policy, args.seed)
+            validate(train, test, generator.catalog, generator.policy, seed)
             args.output_dir.mkdir(parents=True, exist_ok=True)
-            require(not (set(p.name for p in args.output_dir.iterdir()) - set(names)), 'Output directory contains unexpected files')
+            check_output_directory(args.output_dir)
             # Stage both validated byte streams outside outputs_stage1. A failure
             # before replacement cannot leave a partial JSONL in that directory.
             temporary = []
@@ -40,11 +49,14 @@ def main():
             finally:
                 for temp in temporary: temp.unlink(missing_ok=True)
             print(f'Saved {len(train)} train + {len(test)} test scenes to {args.output_dir}')
+            for name in names:
+                print(f'  {args.output_dir / name}')
         else:
-            require(set(p.name for p in args.output_dir.iterdir()) == set(names), 'Expected exactly the two JSONL outputs')
-            validate(*(read_jsonl(args.output_dir / name) for name in names), seed=args.seed)
+            require(all((args.output_dir / name).is_file() for name in names),
+                    f'Expected both component files for id {identifier}: {", ".join(names)}')
+            validate(*(read_jsonl(args.output_dir / name) for name in names), policy=policy, seed=seed)
             if args.check_reproducibility:
-                rows = Generator(args.seed).run()
+                rows = Generator(seed, policy=policy).run()
                 for name, data in zip(names, rows):
                     require(encode(data) == (args.output_dir / name).read_bytes(), f'Non-reproducible output: {name}')
                 print('Reproducibility passed: both JSONL byte streams are identical.')

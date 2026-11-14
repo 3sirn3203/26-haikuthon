@@ -1,0 +1,5 @@
+# Stage1 component generation and Stage2 prompt generation through the OpenAI API.
+# Matches the existing stage-specific requirements; runs without a local model.
+PyYAML==6.0.3
+openai>=2.0.0,<3
+python-dotenv>=1.0.0,<2

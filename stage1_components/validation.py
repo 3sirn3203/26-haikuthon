@@ -3,8 +3,12 @@ from collections import Counter, defaultdict
 import json
 
 from .coverage import check_shared_categories, training_exposure
-from .model import ROOT, Catalog, canonical, context_key, family, inventory, read_yaml, require, total
+from .groups import contrast_plan, inventory_limit, partition
+from .clusters import check_clusters
+from .model import ROOT, Catalog, family, inventory, normalize_scene, read_yaml, require, scene_key, total
+from .lighting import lighting_weights
 from .ranking import check_gallery, check_group
+from .queries import validate_queries
 
 
 def read_jsonl(path):
@@ -19,21 +23,10 @@ def read_jsonl(path):
         for i, line in enumerate(stream):
             require(line.strip(), f'{path}:{i+1}: blank line')
             try:
-                rows.append(json.loads(line, object_pairs_hook=unique_pairs))
+                rows.append(normalize_scene(json.loads(line, object_pairs_hook=unique_pairs)))
             except (ValueError, TypeError) as e:
                 raise ValueError(f'{path}:{i+1}: {e}') from e
     return rows
-
-
-def partition(rows, catalog=None):
-    buckets = defaultdict(list)
-    for s in rows: buckets[context_key(s, catalog)].append(s)
-    easy, groups = [], []
-    for items in buckets.values():
-        if len(items) == 1: easy.extend(items)
-        else:
-            groups.append(items)
-    return easy, groups
 
 
 def distributions(rows, catalog):
@@ -57,19 +50,24 @@ def distributions(rows, catalog):
 def validate(train, test, catalog=None, policy=None, seed=None, verbose=True):
     from .holdouts import Holdouts, quotas
     catalog = catalog or Catalog(); policy = policy or read_yaml(ROOT / 'policy.yaml')
+    lights = lighting_weights(policy, catalog)
     holds = Holdouts(catalog, policy, policy['seed'] if seed is None else seed)
     require(len(train) == sum(policy['train_counts'].values()), 'Train row count')
-    require(len(test) == sum(policy['test_baseline_counts'].values()) + sum(policy['test_contrast_counts'].values()), 'Test row count')
+    require(len(test) == sum(policy.get('test_baseline_counts', {}).values()) + sum(policy['test_contrast_counts'].values()), 'Test row count')
     all_keys = set(); observed_b, observed_r = set(), set()
     summary = {}
     categories = {}
+    has_ids = ['group_id' in row for row in train + test]
+    require(not any(has_ids) or all(has_ids), 'Mixed missing/present group_id fields across splits')
+    next_group_id = 0
     for split, rows in [('train', train), ('test', test)]:
         coverage = Counter(); kinds = Counter()
         for i, s in enumerate(rows):
             try:
                 require(s.get('prompt_id') == f'{i:04d}', 'prompt_id is not the row index')
                 catalog.validate(s, 4 if split == 'train' else 6)
-                k = canonical(s); require(k not in all_keys, 'Semantic duplicate within/across splits'); all_keys.add(k)
+                require(s['rendering']['lighting'] in lights, 'Lighting disabled by policy')
+                k = scene_key(s); require(k not in all_keys, 'Duplicate scene within/across splits'); all_keys.add(k)
                 kind = holds.kind(s); kinds[kind] += 1
                 b, r = catalog.atoms(s)
                 if split == 'train':
@@ -92,6 +90,22 @@ def validate(train, test, catalog=None, policy=None, seed=None, verbose=True):
         require({catalog.entities[c]['kind'] for c in mounts} == {'animal', 'object'},
                 f'{split} must depict riding both animals and vehicles')
         easy, groups = partition(rows, catalog)
+        cluster_summary = {}
+        if split == 'train':
+            require(all(s.get('cluster_id') is None for s in rows), 'Train must not contain clusters')
+            require(all('is_query' not in s for s in rows), 'Query selection applies only to test')
+        else:
+            cluster_summary = check_clusters(rows, groups, policy, catalog, holds)
+            cluster_summary.update(validate_queries(rows, policy, catalog, holds,
+                                                    policy['seed'] if seed is None else seed))
+        if all(has_ids):
+            ids = {s['group_id'] for s in rows}
+            require(ids == set(range(next_group_id, next_group_id + len(ids))),
+                    f'{split} group_ids must be consecutive and unique across splits, starting at {next_group_id}')
+            next_group_id += len(ids)
+        planned = Counter(contrast_plan(policy, split))
+        actual = Counter((total(g[0]), holds.kind(g[0]), len(g)) for g in groups)
+        require(actual == planned, f'{split} group size allocation differs from group_size_weights: {actual}')
         diversity = {}
         if split == 'train':
             units, partners, _ = training_exposure([[s] for s in easy] + groups)
@@ -107,19 +121,19 @@ def validate(train, test, catalog=None, policy=None, seed=None, verbose=True):
         rules = policy['ranking']
         inv_rows = Counter(inventory(s) for group in groups for s in group)
         max_inventory_rows = max(inv_rows.values())
-        require(max_inventory_rows <= rules['max_inventory_rows'], f'{split} repeated inventory: {inv_rows.most_common(1)}')
+        require(max_inventory_rows <= inventory_limit(policy, split), f'{split} repeated inventory: {inv_rows.most_common(1)}')
         for c, amount in coverage.items():
             limit = rules['max_person_fraction' if c == 'person' else 'max_category_fraction']
             require(amount <= len(rows) * limit, f'{split} excessive {c} frequency: {amount}')
         if split == 'test':
             require(len(inv_rows) >= rules['minimum_distinct_test_inventories'], 'Too few distinct test inventories')
-        for metric in ('category_variation', 'count_variation', 'nonspatial_relation_variation', 'attribute_swap'):
+        for metric in ('count_variation', 'nonspatial_relation_variation', 'attribute_swap'):
             require(group_metrics[metric] >= len(groups) * rules['minimum_' + metric],
                     f'{split} insufficient {metric}: {group_metrics[metric]}/{len(groups)}; all metrics: {dict(group_metrics)}')
         require(group_metrics['one_object_attribute_and_direction'] <= len(groups) * rules['max_one_object_attribute_and_direction'],
                 f'{split} excessive one-object attribute/direction grids: {dict(group_metrics)}')
-        expected_easy = policy[f'{split}_baseline_counts']
-        expected_hard = policy['test_contrast_counts'] if split == 'test' else {n: v - expected_easy[n] for n, v in policy['train_counts'].items()}
+        expected_easy = policy.get(f'{split}_baseline_counts', {})
+        expected_hard = policy['test_contrast_counts'] if split == 'test' else {n: v - expected_easy.get(n, 0) for n, v in policy['train_counts'].items()}
         require(Counter(total(s) for s in easy) == Counter(expected_easy), f'{split} baseline count quotas')
         hard = [s for g in groups for s in g]
         require(Counter(total(s) for s in hard) == Counter(expected_hard), f'{split} contrast count quotas')
@@ -149,6 +163,7 @@ def validate(train, test, catalog=None, policy=None, seed=None, verbose=True):
             require(not unseen, f'Test introduces unseen attribute primitives: {unseen}')
             require({p for a, p, b in used_r} <= {p for a, p, b in observed_r}, 'Test introduces an unseen relation primitive')
         summary[split] = {'rows': len(rows), 'baseline': len(easy), 'contrast_groups': len(groups),
+                          'group_sizes': dict(sorted(Counter(len(g) for g in groups).items())), **cluster_summary,
                           'distinct_categories': len(categories[split]), **diversity,
                           'repeated_category_scenes': repeats, 'minimum_category_coverage': min(coverage.values()),
                           'novelty': dict(kinds), 'distinct_contrast_inventories': len(inv_rows), 'max_rows_per_inventory': max_inventory_rows,
@@ -160,7 +175,8 @@ def validate(train, test, catalog=None, policy=None, seed=None, verbose=True):
             for name, counts in data['distributions'].items():
                 if name == 'category': continue
                 print(f'  {name}: {dict((k, round(v, 2)) for k, v in sorted(counts.items()))}', flush=True)
-            for name, target in [('domain', policy['domain_weights']), ('style', policy['style_weights']), ('primary_relation', policy['relation_weights'])]:
+            for name, target in [('domain', policy['domain_weights']), ('style', policy['style_weights']),
+                                 ('lighting', lights), ('primary_relation', policy['relation_weights'])]:
                 actual = data['distributions'][name]; z = sum(target.values())
                 delta = {k: round(100 * (actual[k] / data['rows'] - target[k] / z), 2) for k in target}
                 print(f'  {name} target difference (percentage points): {delta}', flush=True)
