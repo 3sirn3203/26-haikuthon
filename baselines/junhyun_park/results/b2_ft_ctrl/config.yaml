@@ -1,0 +1,29 @@
+exp_id: junhyun_park/b2_ft_ctrl
+train:
+  script: baselines/junhyun_park/finetune/train_fgclip_hn.py   # Colab(L4) 에서 실행: finetune/colab_finetune.ipynb
+  base: qihoo360/fg-clip-base
+  data: 공개 train_v1 (prompt 4,000 중 train 3,500 / val 500 무작위 분할, 번들 단위 아님)
+  hn_images_used: false      # train HN 이미지 500장·주최측 variants 파일 미사용
+  text_hn: none            # --hn 0 (대조군)
+  loss: symmetric InfoNCE, HN 텍스트는 image->text 의 추가 negative
+  trainable: 마지막 4블록(비전/텍스트) + 투영/정규화 층 (41.9M / 150.1M)
+  epochs: 3
+  batch_size: 64
+  lr: 1.0e-5
+  optimizer: AdamW wd 0.05, warmup 10% + cosine
+  amp: bf16
+  max_length: 77
+  seed: 0
+  val_500: {zero_shot: 0.8736, final_epoch: 0.9240}   # 상대 비교용(후보 500장), test 점수 아님
+build:
+  script: baselines/junhyun_park/scripts/build_fgclip_submission.py
+  transformers_pin: transformers==4.46.3
+  extra_requirements: [einops==0.8.1, torchvision==0.29.2]
+  fgclip_meta: {version: 1, walk_short_pos: true, max_length: 77}
+  note: auto_map 의 허브 repo 접두어를 제거해야 오프라인 로드됨 (수정 후 재업로드)
+run:
+  script: baselines/junhyun_park/scripts/modal_run_fgclip.py
+  runtime: Modal L4
+scoring:
+  script: baselines/junhyun_park/scripts/score_csv.py
+  public: test id 7000-7999 (GUIDE.md 잠정), private: 나머지

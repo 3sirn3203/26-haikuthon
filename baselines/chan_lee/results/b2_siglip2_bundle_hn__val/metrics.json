@@ -1,0 +1,118 @@
+{
+  "exp_id": "chan_lee/b2_siglip2_bundle_hn__val",
+  "author": "chan_lee",
+  "category": "honest",
+  "method": "B2 fine-tuned dual encoder: SigLIP2 so400m, last 4 blocks + heads, sigmoid loss; bundle batches + train HN images as extra negatives (b)",
+  "stage1_model": "ViT-SO400M-16-SigLIP2-384:webli",
+  "stage2_model": null,
+  "top_k": null,
+  "uses_train_finetune": true,
+  "uses_train_hard_negatives": true,
+  "violates_cross_query_rule": false,
+  "eval_split": "val",
+  "n_queries": 500,
+  "pool_size": 602,
+  "n_hn_in_pool": 102,
+  "scores": {
+    "recall_at_1": 0.642,
+    "ndcg_at_5": 0.8268325123418385,
+    "score": 0.7344162561709193,
+    "n": 500,
+    "recall_at_5": 0.974,
+    "recall_at_10": 1.0,
+    "median_rank": 1.0,
+    "ci95": [
+      0.7032605963524705,
+      0.7648761298948411
+    ]
+  },
+  "scores_by_split": {
+    "val": {
+      "recall_at_1": 0.642,
+      "ndcg_at_5": 0.8268325123418385,
+      "score": 0.7344162561709193,
+      "n": 500,
+      "recall_at_5": 0.974,
+      "recall_at_10": 1.0,
+      "median_rank": 1.0,
+      "ci95": [
+        0.7032605963524705,
+        0.7648761298948411
+      ]
+    }
+  },
+  "scores_by_type": {
+    "easy": {
+      "recall_at_1": 0.95,
+      "ndcg_at_5": 0.9815464876785729,
+      "score": 0.9657732438392864,
+      "n": 20,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "median_rank": 1.0,
+      "ci95": [
+        0.8973197315178594,
+        1.0
+      ]
+    },
+    "bundle": {
+      "recall_at_1": 0.6291666666666667,
+      "ndcg_at_5": 0.820386096702808,
+      "score": 0.7247763816847375,
+      "n": 480,
+      "recall_at_5": 0.9729166666666667,
+      "recall_at_10": 1.0,
+      "median_rank": 1.0,
+      "ci95": [
+        0.6940886509433529,
+        0.7577542643614591
+      ]
+    }
+  },
+  "public_split_provisional": false,
+  "public_split_source": "n/a",
+  "expected_random": {
+    "recall_at_1": 0.0016611295681063123,
+    "ndcg_at_5": 0.004897772622723243,
+    "score": 0.0032794510954147777
+  },
+  "diagnostics": {
+    "top1_breakdown": {
+      "gt": 0.642,
+      "own_hn": 0.004,
+      "bundle_sibling": 0.328,
+      "bundle_sibling_hn": 0.024,
+      "other": 0.002
+    },
+    "stage1_hn_above_gt_rate": 0.08823529411764706,
+    "stage1_recall_at_k": {
+      "all": {
+        "1": 0.642,
+        "5": 0.974,
+        "10": 1.0,
+        "20": 1.0,
+        "50": 1.0,
+        "100": 1.0,
+        "200": 1.0
+      }
+    }
+  },
+  "timing": {
+    "device": "mps:M4Max",
+    "image_embeddings_cached": false,
+    "model_load_sec": 20.76627308299976,
+    "image_encode_sec": 32.952681167000264,
+    "image_io_wait_sec": 0.08033608200094022,
+    "text_encode_sec": 2.7035184589985874,
+    "stage1_search_sec": 0.004338583001299412,
+    "rerank_sec": 0.0,
+    "postprocess_sec": 0.0,
+    "total_sec": 56.50101487500069
+  },
+  "peak_vram_gb": 6.1707763671875,
+  "within_vram_budget": true,
+  "params_b": 1.136039602,
+  "artifact_size_gb": 2.272079204,
+  "git_commit": "057a0c4",
+  "date": "2026-11-10T01:00:05"
+}

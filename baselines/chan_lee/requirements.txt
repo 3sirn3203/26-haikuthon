@@ -1,0 +1,24 @@
+# Python 3.12, uv venv: uv venv --python 3.12 .venv && VIRTUAL_ENV=.venv uv pip install -r requirements.txt
+torch==2.15.0
+torchvision==0.29.2
+transformers==5.22.2
+accelerate==1.15.0
+peft==0.21.2
+open-clip-torch==4.2.1
+timm==1.0.31
+huggingface-hub==2.4.0
+tokenizers==0.23.3
+safetensors==0.8.0
+sentencepiece==0.2.3
+protobuf==7.36.2
+numpy==2.5.4
+scipy==1.18.1
+pandas==3.1.1
+pillow==13.0.0
+pyyaml==6.0.3
+matplotlib==3.11.2
+tqdm==4.70.1
+pytest==9.2.0
+sentence-transformers==6.2.0
+qwen-vl-utils==0.0.14
+gdown==6.5.1

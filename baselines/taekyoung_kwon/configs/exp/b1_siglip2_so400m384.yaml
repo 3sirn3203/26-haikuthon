@@ -1,0 +1,15 @@
+exp_id: taekyoung_kwon/b1_siglip2_so400m384
+category: honest
+method: "B1 zero-shot dual encoder: SigLIP2 so400m/16@384; cosine similarity over the full pool"
+eval_split: test
+include_hn: true
+uses_train_finetune: false
+uses_train_hard_negatives: false
+violates_cross_query_rule: false
+retriever:
+  type: openclip
+  model: ViT-SO400M-16-SigLIP2-384
+  pretrained: webli
+  precision: fp16
+  batch_size: 32
+  num_workers: 8

@@ -1,0 +1,34 @@
+exp_id: junhyun_park/b3_ft_bundle_bval
+train:
+  script: baselines/junhyun_park/finetune/train_fgclip_hn.py   # Colab(L4)
+  base: qihoo360/fg-clip-base
+  data: 공개 train_v1 (train 3,500 / val 500, make_val_ids.py 가 chan_lee val_split(seed 20261111) 그대로 생성: val = 묶음 60개 + 기준 문항 20)
+  val_ids: baselines/junhyun_park/finetune/val_ids.txt
+  bundles: baselines/junhyun_park/finetune/train_bundles.json
+  hn_images_used_for_training: false   # val_hn=1: 짝 프롬프트가 val 인 HN 102장을 val 후보 풀에만 넣음 (후보 602장)
+  text_hn: none            # --hn 0
+  batching: bundle         # 같은 묶음(8문항)을 한 배치에 넣음, train_bundles.json (chan_lee batches(mode='bundle') 방식)
+  loss: symmetric InfoNCE
+  trainable: 마지막 4블록(비전/텍스트) + 투영/정규화 층 (41.9M / 150.1M)
+  optimizer: AdamW wd 0.05, warmup 10% + cosine
+  epochs: 3
+  batch_size: 64
+  lr: 1.0e-5
+  amp: bf16
+  max_length: 77
+  seed: 0
+  val_500: {zero_shot: 0.4937, epoch0: 0.7146, epoch1: 0.7369, final_epoch: 0.7386}   # 묶음 단위 val + HN 102 (후보 602장), 상대 비교용
+  val_500_rand_batching: {epoch0: 0.5723, epoch1: 0.6093, final_epoch: 0.6223}   # 같은 분할에서 --batching random 대조 (rand_bval, test 미평가)
+  test_recall_at_5: 0.9383   # 결과 CSV 에서 계산 (ctrl 0.8694)
+build:
+  script: baselines/junhyun_park/scripts/build_fgclip_submission.py
+  transformers_pin: transformers==4.46.3
+  extra_requirements: [einops==0.8.1, torchvision==0.29.2]
+  fgclip_meta: {version: 1, walk_short_pos: true, max_length: 77}
+  note: 노트북이 만든 zip 의 config.json auto_map 접두어(qihoo360/fg-clip-base--)를 제거해 재포장 후 평가
+run:
+  script: baselines/junhyun_park/scripts/modal_run_fgclip.py
+  runtime: Modal L4
+scoring:
+  script: baselines/junhyun_park/scripts/score_csv.py
+  public: test id 7000-7999 (GUIDE.md 잠정), private: 나머지

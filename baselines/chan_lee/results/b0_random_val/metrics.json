@@ -1,0 +1,90 @@
+{
+  "exp_id": "chan_lee/b0_random_val",
+  "author": "chan_lee",
+  "category": "honest",
+  "method": "B0 sanity: uniform random scores; checks the metric against its expectation",
+  "stage1_model": "random",
+  "stage2_model": null,
+  "top_k": null,
+  "uses_train_finetune": false,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "eval_split": "val",
+  "n_queries": 500,
+  "pool_size": 602,
+  "n_hn_in_pool": 102,
+  "scores": {
+    "recall_at_1": 0.002,
+    "ndcg_at_5": 0.00775827135390557,
+    "score": 0.004879135676952785,
+    "n": 500,
+    "recall_at_5": 0.014,
+    "recall_at_10": 0.022,
+    "median_rank": 307.0
+  },
+  "scores_by_split": {
+    "val": {
+      "recall_at_1": 0.002,
+      "ndcg_at_5": 0.00775827135390557,
+      "score": 0.004879135676952785,
+      "n": 500,
+      "recall_at_5": 0.014,
+      "recall_at_10": 0.022,
+      "median_rank": 307.0
+    }
+  },
+  "scores_by_type": {
+    "easy": {
+      "recall_at_1": 0.0,
+      "ndcg_at_5": 0.0,
+      "score": 0.0,
+      "n": 20,
+      "recall_at_5": 0.0,
+      "recall_at_10": 0.0,
+      "median_rank": 397.5
+    },
+    "bundle": {
+      "recall_at_1": 0.0020833333333333333,
+      "ndcg_at_5": 0.008081532660318302,
+      "score": 0.005082432996825818,
+      "n": 480,
+      "recall_at_5": 0.014583333333333334,
+      "recall_at_10": 0.022916666666666665,
+      "median_rank": 305.0
+    }
+  },
+  "public_split_provisional": false,
+  "expected_random": {
+    "recall_at_1": 0.0016611295681063123,
+    "ndcg_at_5": 0.004897772622723243,
+    "score": 0.0032794510954147777
+  },
+  "diagnostics": {
+    "top1_breakdown": {
+      "gt": 0.002,
+      "own_hn": 0.0,
+      "bundle_sibling": 0.014,
+      "bundle_sibling_hn": 0.0,
+      "other": 0.984
+    },
+    "stage1_hn_above_gt_rate": 0.5392156862745098
+  },
+  "timing": {
+    "device": "mps:M4Max",
+    "image_embeddings_cached": false,
+    "model_load_sec": 4.362495383247733e-05,
+    "image_encode_sec": 2.2500171326100826e-06,
+    "image_io_wait_sec": 0.0,
+    "text_encode_sec": 1.0420335456728935e-06,
+    "stage1_search_sec": 0.0005072080530226231,
+    "rerank_sec": 0.0,
+    "postprocess_sec": 0.0,
+    "total_sec": 0.009456166997551918
+  },
+  "peak_vram_gb": 0.0004425048828125,
+  "within_vram_budget": true,
+  "params_b": 0.0,
+  "artifact_size_gb": 0.0,
+  "git_commit": "93db38f-dirty",
+  "date": "2026-11-09T14:53:40"
+}

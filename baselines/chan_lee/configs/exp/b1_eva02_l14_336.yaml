@@ -1,0 +1,5 @@
+exp_id: chan_lee/b1_eva02_l14_336
+category: honest
+method: "B1 zero-shot dual encoder: EVA02-CLIP-L/14@336; cosine similarity over the full pool"
+eval_split: test
+retriever: {type: openclip, model: EVA02-L-14-336, pretrained: merged2b_s6b_b61k, precision: fp16, batch_size: 32, num_workers: 8}

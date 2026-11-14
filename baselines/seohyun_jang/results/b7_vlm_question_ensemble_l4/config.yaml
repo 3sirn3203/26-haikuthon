@@ -1,0 +1,10 @@
+b7_k: 5
+b7_question: 'Check the image carefully against this description: the exact number
+  of each object, each object''s color, material, pattern and pose, and every left/right/above/below/in-front
+  relation.
+
+  Description: "{prompt}"
+
+  Is every detail of the description correct in this image? Answer with Yes or No.'
+base_checkpoint: b2_siglip2_bundle_l4
+wise_alpha: 0.5

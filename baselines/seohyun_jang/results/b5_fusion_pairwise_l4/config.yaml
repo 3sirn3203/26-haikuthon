@@ -1,0 +1,18 @@
+base: b3_siglip2_bundle_l4__qwen35_4b_full
+fold_seed: 0
+fusion_weights:
+- 0
+- 0.25
+- 0.5
+- 1
+- 2
+- 4
+- 8
+pairwise_budget_sec: 840
+pairwise_taus:
+- 0
+- 0.5
+- 1
+- 2
+- 4
+- 1000000000.0

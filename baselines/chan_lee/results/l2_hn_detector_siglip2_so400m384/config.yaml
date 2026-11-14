@@ -1,0 +1,11 @@
+lambdas:
+- 0.0
+- 0.005
+- 0.01
+- 0.02
+- 0.03
+- 0.05
+- 0.08
+- 0.12
+- 0.2
+stage1_config: configs/exp/b1_siglip2_so400m384.yaml

@@ -1,0 +1,114 @@
+{
+  "exp_id": "donghwi_kwon/b1_resnet18_bigru",
+  "author": "donghwi_kwon",
+  "category": "honest",
+  "method": "ResNet18 image encoder + bidirectional GRU text encoder; independent cosine Top5 retrieval",
+  "stage1_model": "custom:ResNet18-BiGRU-256",
+  "stage2_model": null,
+  "top_k": null,
+  "output_top_k": 5,
+  "uses_train_finetune": true,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "eval_split": "test_full",
+  "scores": {
+    "recall_at_1": 0.0035,
+    "ndcg_at_5": 0.011000309780947723,
+    "score": 0.007250154890473861,
+    "n": 8000,
+    "recall_at_5": 0.018125
+  },
+  "scores_by_split": {
+    "public": {
+      "recall_at_1": 0.003,
+      "ndcg_at_5": 0.009976307110209633,
+      "score": 0.006488153555104816,
+      "n": 1000,
+      "recall_at_5": 0.017
+    },
+    "private": {
+      "recall_at_1": 0.0035714285714285713,
+      "ndcg_at_5": 0.011146595876767449,
+      "score": 0.00735901222409801,
+      "n": 7000,
+      "recall_at_5": 0.018285714285714287
+    }
+  },
+  "n_queries": 8000,
+  "pool_size": 15000,
+  "n_hn_in_pool": 7000,
+  "public_split_provisional": true,
+  "public_split_source": "GUIDE.md: numeric query IDs 7000-7999; differs from RESULTS_SCHEMA.md fallback",
+  "timing": {
+    "device": "cuda:NVIDIA L4",
+    "image_embeddings_cached": null,
+    "model_load_sec": null,
+    "image_encode_sec": null,
+    "image_io_wait_sec": null,
+    "text_encode_sec": null,
+    "stage1_search_sec": null,
+    "rerank_sec": 0.0,
+    "total_sec": 240.0,
+    "total_sec_is_approximate": true,
+    "source": "user observation: GPU evaluation start to CSV complete",
+    "includes_gpu_allocation_wait": false,
+    "cache_status_verified": false
+  },
+  "peak_vram_gb": null,
+  "params_b": 0.011871681,
+  "artifact_size_gb": 0.047538012,
+  "git_commit": "unknown",
+  "date": "2026-11-11T00:00:00+09:00",
+  "date_semantics": "record import date only (2026-11-11); time-of-day is not the original execution timestamp",
+  "measurement_status": "partial_import_of_existing_artifacts",
+  "complete_runtime_benchmark": false,
+  "model_metadata": {
+    "parameter_count": 11871681,
+    "parameter_count_method": "safetensors shapes excluding BatchNorm buffers; verified against nn.Module",
+    "weights_bytes": 47538012,
+    "weights_mib": 45.33578109741211,
+    "weights_sha256": "90365e1c4ff830a734e053c110cc40d9cfb5debace9eb62aac959fb50e5cb475",
+    "model_py_sha256": "9266fa68d270eea55009d72b0fec315f90b80b2967d64dd3c670847313447202",
+    "vocab_size": 737,
+    "parameter_dtypes": [
+      "F32"
+    ]
+  },
+  "inference_config": {
+    "embedding_dim": 256,
+    "text_hidden": 192,
+    "max_length": 80,
+    "image_batch_size": 96,
+    "text_batch_size": 32,
+    "preprocess_workers": 4,
+    "inference_amp": true
+  },
+  "training_provenance": {
+    "training_data": "train_v1, as reported by the user",
+    "template": "train.py copied from the previously prepared Colab source",
+    "template_defaults": {
+      "epochs": 3,
+      "batch_size": 64,
+      "seed": 42,
+      "val_fraction": 0.1,
+      "negative_images_per_batch": 0
+    },
+    "template_initialization": "ImageNet ResNet18 unless --no-imagenet or --init-dir is used",
+    "initialization_of_uploaded_weights": "unverified: no original training metadata or logs in ZIP",
+    "train_hn_flag_basis": "template default: not used in training loss; present in train validation candidate pool",
+    "train_hn_flag_verified_from_run": false,
+    "actual_run_hyperparameters_verified": false
+  },
+  "provenance": {
+    "submission_zip_sha256": "446bf773d14faa5e97936f6546b5b91c7984510b16a303551874c6d1825cef91",
+    "prediction_csv_sha256": "cc85e37e8d8853074a1ee0b47cab5c42c2722a5f8075d4029c15bef4e3fdd0c7",
+    "zip_csv_pairing": "provided together by user; not independently linked by evaluation logs",
+    "score_source": "ranked Top5 CSV, evaluated offline using GUIDE numeric truth convention",
+    "pessimistic_score_ties_verified": false,
+    "inference_rerun_for_import": false,
+    "original_run_git_commit_available": false,
+    "reference_repository_snapshot": "0b6075a2a20b24db2a5ad2289cbc6ba6f16e9bd5",
+    "reference_guide_sha256": "d1a3057eb4a2fbb241d0499665d5e438d8d3c39fa025d14ef59079bf20313bc6",
+    "reference_schema_sha256": "71bb70a49deba28738b87ddba3e65095e3d3fabb6459b2cb45ee1411e73d3fd8"
+  }
+}

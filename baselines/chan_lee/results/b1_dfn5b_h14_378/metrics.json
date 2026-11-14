@@ -1,0 +1,149 @@
+{
+  "exp_id": "chan_lee/b1_dfn5b_h14_378",
+  "author": "chan_lee",
+  "category": "honest",
+  "method": "B1 zero-shot dual encoder: Apple DFN5B ViT-H/14@378; cosine similarity over the full pool",
+  "stage1_model": "ViT-H-14-378-quickgelu:dfn5b",
+  "stage2_model": null,
+  "top_k": null,
+  "uses_train_finetune": false,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "eval_split": "test_full",
+  "n_queries": 8000,
+  "pool_size": 15000,
+  "n_hn_in_pool": 7000,
+  "scores": {
+    "recall_at_1": 0.318,
+    "ndcg_at_5": 0.5436260413155152,
+    "score": 0.4308130206577576,
+    "n": 8000,
+    "recall_at_5": 0.74625,
+    "recall_at_10": 0.91275,
+    "median_rank": 2.0,
+    "ci95": [
+      0.4216847501695291,
+      0.43962789617854514
+    ]
+  },
+  "scores_by_split": {
+    "public": {
+      "recall_at_1": 0.374,
+      "ndcg_at_5": 0.5763509281667438,
+      "score": 0.4751754640833719,
+      "n": 1000,
+      "recall_at_5": 0.764,
+      "recall_at_10": 0.917,
+      "median_rank": 2.0,
+      "ci95": [
+        0.45022206328543335,
+        0.5012513822095143
+      ]
+    },
+    "private": {
+      "recall_at_1": 0.31,
+      "ndcg_at_5": 0.5389510574796254,
+      "score": 0.4244755287398127,
+      "n": 7000,
+      "recall_at_5": 0.7437142857142857,
+      "recall_at_10": 0.9121428571428571,
+      "median_rank": 3.0,
+      "ci95": [
+        0.41515008237754264,
+        0.4327329807147868
+      ]
+    }
+  },
+  "scores_by_type": {
+    "easy": {
+      "recall_at_1": 0.725,
+      "ndcg_at_5": 0.892876130885443,
+      "score": 0.8089380654427214,
+      "n": 800,
+      "recall_at_5": 0.995,
+      "recall_at_10": 0.99875,
+      "median_rank": 1.0,
+      "ci95": [
+        0.7880528342900887,
+        0.8293591695496156
+      ]
+    },
+    "bundle": {
+      "recall_at_1": 0.2727777777777778,
+      "ndcg_at_5": 0.5048204758077455,
+      "score": 0.38879912679276163,
+      "n": 7200,
+      "recall_at_5": 0.7186111111111111,
+      "recall_at_10": 0.9031944444444444,
+      "median_rank": 3.0,
+      "ci95": [
+        0.3792610018237023,
+        0.397730020726063
+      ]
+    }
+  },
+  "public_split_provisional": true,
+  "public_split_source": "hn_pairing",
+  "expected_random": {
+    "recall_at_1": 6.666666666666667e-05,
+    "ndcg_at_5": 0.00019656394125862616,
+    "score": 0.00013161530396264641
+  },
+  "diagnostics": {
+    "top1_breakdown": {
+      "gt": 0.318,
+      "own_hn": 0.068625,
+      "bundle_sibling": 0.460125,
+      "bundle_sibling_hn": 0.1195,
+      "other": 0.03375
+    },
+    "stage1_hn_above_gt_rate": 0.21814285714285714,
+    "stage1_recall_at_k": {
+      "all": {
+        "1": 0.318,
+        "5": 0.74625,
+        "10": 0.91275,
+        "20": 0.987625,
+        "50": 0.998875,
+        "100": 0.99975,
+        "200": 1.0
+      },
+      "public": {
+        "1": 0.374,
+        "5": 0.764,
+        "10": 0.917,
+        "20": 0.993,
+        "50": 0.998,
+        "100": 0.999,
+        "200": 1.0
+      },
+      "private": {
+        "1": 0.31,
+        "5": 0.7437142857142857,
+        "10": 0.9121428571428571,
+        "20": 0.9868571428571429,
+        "50": 0.999,
+        "100": 0.9998571428571429,
+        "200": 1.0
+      }
+    }
+  },
+  "timing": {
+    "device": "mps:M4Max",
+    "image_embeddings_cached": false,
+    "model_load_sec": 7.360887959017418,
+    "image_encode_sec": 1646.083172915969,
+    "image_io_wait_sec": 0.0752603723667562,
+    "text_encode_sec": 40.258122458006255,
+    "stage1_search_sec": 0.11832887498894706,
+    "rerank_sec": 0.0,
+    "postprocess_sec": 0.0,
+    "total_sec": 1694.6015469580307
+  },
+  "peak_vram_gb": 6.0495452880859375,
+  "within_vram_budget": true,
+  "params_b": 0.986714881,
+  "artifact_size_gb": 1.973429762,
+  "git_commit": "452aad7-dirty",
+  "date": "2026-11-09T16:13:54"
+}

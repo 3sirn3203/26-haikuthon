@@ -1,0 +1,19 @@
+# ichan_jung 전용 ignore 규칙 (루트 .gitignore는 건드리지 않음)
+
+# 제출 ZIP, 변환된 가중치, 빌드 산출물
+build/
+*.zip
+*.safetensors
+*.pt
+*.pth
+*.bin
+
+# 가상환경, 캐시
+.venv/
+cache/
+__pycache__/
+
+# 제출 CSV와 문항별 예측 (정답 매핑 포함 → 커밋 금지)
+submissions/
+results/**/predictions*
+results/**/*.csv

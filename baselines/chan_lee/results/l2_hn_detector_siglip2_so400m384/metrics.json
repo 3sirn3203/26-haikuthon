@@ -1,0 +1,119 @@
+{
+  "exp_id": "chan_lee/l2_hn_detector_siglip2_so400m384",
+  "author": "chan_lee",
+  "category": "loophole",
+  "method": "L2 image-level HN detector (logreg on frozen ViT-SO400M-16-SigLIP2-384:webli embeddings, train HN) as ranking prior",
+  "stage1_model": "ViT-SO400M-16-SigLIP2-384:webli",
+  "stage2_model": "logreg_hn_prior",
+  "top_k": null,
+  "uses_train_finetune": true,
+  "uses_train_hard_negatives": true,
+  "violates_cross_query_rule": false,
+  "eval_split": "test_full",
+  "n_queries": 8000,
+  "pool_size": 15000,
+  "n_hn_in_pool": 7000,
+  "scores": {
+    "recall_at_1": 0.3125,
+    "ndcg_at_5": 0.535409253688164,
+    "score": 0.423954626844082,
+    "n": 8000,
+    "recall_at_5": 0.736875,
+    "recall_at_10": 0.90625,
+    "median_rank": 3.0,
+    "ci95": [
+      0.41524499798542674,
+      0.4325055206522377
+    ]
+  },
+  "scores_by_split": {
+    "public": {
+      "recall_at_1": 0.35,
+      "ndcg_at_5": 0.5609339051924321,
+      "score": 0.45546695259621606,
+      "n": 1000,
+      "recall_at_5": 0.756,
+      "recall_at_10": 0.919,
+      "median_rank": 2.0
+    },
+    "private": {
+      "recall_at_1": 0.30714285714285716,
+      "ndcg_at_5": 0.53176287490184,
+      "score": 0.41945286602234866,
+      "n": 7000,
+      "recall_at_5": 0.7341428571428571,
+      "recall_at_10": 0.9044285714285715,
+      "median_rank": 3.0
+    }
+  },
+  "baseline_scores_by_split": {
+    "public": {
+      "recall_at_1": 0.362,
+      "ndcg_at_5": 0.5697224767688861,
+      "score": 0.46586123838444304,
+      "n": 1000,
+      "recall_at_5": 0.765,
+      "recall_at_10": 0.918,
+      "median_rank": 2.0
+    },
+    "private": {
+      "recall_at_1": 0.30842857142857144,
+      "ndcg_at_5": 0.5338239162438313,
+      "score": 0.42112624383620134,
+      "n": 7000,
+      "recall_at_5": 0.7378571428571429,
+      "recall_at_10": 0.9067142857142857,
+      "median_rank": 3.0
+    }
+  },
+  "detector": {
+    "val_auc": 0.550235294117647,
+    "test_auc": 0.5468652844429016,
+    "n_train": 3898,
+    "n_train_hn": 398,
+    "lambda_chosen_on_val": 0.01,
+    "lambda_oracle_on_test": 0.0,
+    "test_score_by_lambda": {
+      "0.0": 0.4267181181547316,
+      "0.005": 0.42499723430386416,
+      "0.01": 0.423954626844082,
+      "0.02": 0.4192706465073913,
+      "0.03": 0.41189513692314283,
+      "0.05": 0.39193957636357274,
+      "0.08": 0.35198197377189383,
+      "0.12": 0.28894158516875756,
+      "0.2": 0.15143326535027438
+    },
+    "val_score_by_lambda": {
+      "0.0": 0.4581636055348702,
+      "0.005": 0.460773862928448,
+      "0.01": 0.46287516401388734,
+      "0.02": 0.4571199654387695,
+      "0.03": 0.45095708416618085,
+      "0.05": 0.446365097233087,
+      "0.08": 0.41374061863230704,
+      "0.12": 0.38222121157466576,
+      "0.2": 0.25796577777095675
+    }
+  },
+  "public_split_provisional": true,
+  "public_split_source": "hn_pairing",
+  "timing": {
+    "device": "mps:M4Max",
+    "image_embeddings_cached": false,
+    "model_load_sec": 66.47252895799465,
+    "image_encode_sec": 789.9048047499964,
+    "image_io_wait_sec": 0.08788458304479718,
+    "text_encode_sec": 41.644592666998506,
+    "stage1_search_sec": 0.13029633305268362,
+    "rerank_sec": 0.0,
+    "postprocess_sec": 0.0,
+    "total_sec": 899.1200524590095,
+    "note": "stage-1 timing of the B1 run; detector cost is negligible"
+  },
+  "peak_vram_gb": 6.1706390380859375,
+  "params_b": 1.136039602,
+  "artifact_size_gb": 2.272079204,
+  "git_commit": "c8aa3a3-dirty",
+  "date": "2026-11-09T18:27:27"
+}

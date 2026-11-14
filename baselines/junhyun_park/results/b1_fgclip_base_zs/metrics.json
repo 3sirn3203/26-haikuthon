@@ -1,0 +1,63 @@
+{
+  "exp_id": "junhyun_park/b1_fgclip_base_zs",
+  "author": "junhyun_park",
+  "category": "honest",
+  "method": "FG-CLIP base zero-shot (v1, bf16, walk_short_pos, max_length 77), 서버 형식 submission.zip, Modal L4에서 서버 evaluation.runner.evaluate 직접 실행 (웹 업로드·백엔드·큐 경로는 거치지 않음)",
+  "stage1_model": "qihoo360/fg-clip-base",
+  "stage2_model": null,
+  "top_k": null,
+  "uses_train_finetune": false,
+  "uses_train_hard_negatives": false,
+  "violates_cross_query_rule": false,
+  "eval_split": "test_full",
+  "scores": {
+    "n": 8000,
+    "recall_at_1": 0.3078,
+    "ndcg_at_5": 0.5232,
+    "score": 0.4155
+  },
+  "scores_by_split": {
+    "public": {
+      "n": 1000,
+      "recall_at_1": 0.356,
+      "ndcg_at_5": 0.5508,
+      "score": 0.4534
+    },
+    "private": {
+      "n": 7000,
+      "recall_at_1": 0.3009,
+      "ndcg_at_5": 0.5193,
+      "score": 0.4101
+    }
+  },
+  "timing": {
+    "device": "cuda:L4",
+    "image_embeddings_cached": false,
+    "model_load_sec": 5.4,
+    "image_encode_sec": 241.6,
+    "image_io_wait_sec": null,
+    "text_encode_sec": 3.1,
+    "stage1_search_sec": 0.4,
+    "rerank_sec": null,
+    "total_sec": 250.51,
+    "setup_sec": 37.03
+  },
+  "peak_vram_gb": 1.0,
+  "params_b": 0.15,
+  "artifact_size_gb": 0.6,
+  "git_commit": "2f06683-dirty",
+  "date": "2026-11-11",
+  "n_queries": 8000,
+  "pool_size": 15000,
+  "n_hn_in_pool": 7000,
+  "public_split_provisional": true,
+  "timing_rerun_warm": {
+    "image_encode_sec": 73.4,
+    "text_encode_sec": 3.1,
+    "stage1_search_sec": 0.4,
+    "total_sec": 81.38,
+    "setup_sec": 34.51,
+    "peak_vram_gb": 1.0,
+    "note": "같은 zip 재실행. 첫 실행(cold)은 image_encode 241.6s"
+  }
+}

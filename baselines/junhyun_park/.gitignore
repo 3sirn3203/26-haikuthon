@@ -1,0 +1,15 @@
+# 데이터/가중치/캐시/예측 (GUIDE.md §5)
+build/
+runs/
+cache/
+.venv/
+__pycache__/
+*.zip
+*.safetensors
+*.pt
+*.bin
+*.npy
+*.npz
+submission*.csv
+# 루트 .gitignore 의 test*/ 때문에 무시되는 테스트 폴더를 커밋 대상으로
+!tests/
