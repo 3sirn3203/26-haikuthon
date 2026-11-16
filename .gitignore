@@ -91,7 +91,3 @@ train*/
 
 test*.zip
 train*.zip
-
-# Keep the single-component OpenAI experiment under version control.
-!/stage2_prompt_generation/test_openai/
-/stage2_prompt_generation/test_openai/outputs/

@@ -1,195 +1,187 @@
-"""Generate every prompt first, then verify each once with the source critic.
+"""Submit component prompts to OpenAI Batch API, or collect a submitted batch."""
 
-The CLI validates Stage1 inputs and manages the server. No inference, server
-startup, or output writes happen on import. Completed runs use exactly two LLM
-requests per input row, irrespective of verification results.
-"""
-
-from collections import Counter
-from itertools import islice
-import json
+import argparse
+import os
 from pathlib import Path
+import sys
 
-from .client import CRITIC_SCHEMA
-from .config import default_config, generation_settings
-from .semantics import PRESENTATIONS, english_scene, parse_json_output
-
-
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / 'outputs_stage2'
-OUTPUT_NAMES = {'train': 'train_prompts.jsonl', 'test': 'test_prompts.jsonl'}
-
-
-def load_instructions():
-    directory = Path(__file__).resolve().parent / 'prompts'
-    return {
-        name: (directory / f'{name}_train_scene.txt').read_text(encoding='utf-8')
-        for name in ['realize', 'critic']
-    }
+from .batch import (
+    TERMINAL_STATUSES, batch_jsonl, batch_split, build_batch_requests, collect_results,
+    delete_input_file, restore_components, submit_batch, wait_for_batch,
+)
+from .runner import (
+    MODEL, REASONING_EFFORT, default_output_path, load_components, load_saved_rows,
+    project_path, save_results,
+)
+from .config import DEFAULT_CONFIG, input_path, load_config, validate_config
 
 
-def generation_messages(scene, vocab, instructions):
-    payload = {
-        'scene': english_scene(scene, vocab),
-        'presentation': PRESENTATIONS[scene['presentation_id'] % len(PRESENTATIONS)],
-    }
-    return [
-        {'role': 'system', 'content': instructions},
-        {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)},
-    ]
+def _report_status(batch):
+    counts = batch.request_counts
+    detail = (f', completed={counts.completed}/{counts.total}, failed={counts.failed}'
+              if counts is not None else '')
+    print(f'Batch: {batch.id}, status={batch.status}{detail}', file=sys.stderr, flush=True)
 
 
-def _batches(values, size):
-    if type(size) is not int or size < 1:
-        raise ValueError('batch_size must be a positive integer')
-    source = iter(values)
-    while batch := list(islice(source, size)):
-        yield batch
-
-
-def _generate_once(client, conversations, settings, seed):
-    replies = client.generate(conversations, settings, seed)
-    if len(replies) != len(conversations) or any(not isinstance(reply, str) for reply in replies):
-        raise ValueError('Expected one text response per LLM request')
-    return replies
-
-
-def _prompt_text(reply):
-    """Unwrap structured output without filtering, repairing, or retrying it.
-
-    Preserve an unparseable response verbatim so the later critic can inspect it;
-    malformed/empty responses must not silently remove an input from the run.
-    """
+def _temperature(value):
+    if value.lower() in ('none', 'null'):
+        return None
     try:
-        parsed = parse_json_output(reply)
-        if set(parsed) == {'prompt_text'} and isinstance(parsed['prompt_text'], str):
-            return parsed['prompt_text']
-    except (ValueError, TypeError):
-        pass
-    return reply
+        return float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError('temperature must be a number or none') from exc
 
 
-def _critic_ok(reply):
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument('--split', choices=['train', 'test'],
+                        help='default: test for submission, original split for --batch-id')
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--id', dest='prompt_ids', action='append',
+                           help='select a prompt_id; repeat for multiple IDs; omit to select all rows')
+    selection.add_argument('--limit', type=int, help='submit up to N components after --offset')
+    selection.add_argument('--group-id', type=int, help='submit every component in one small group')
+    selection.add_argument('--cluster-id', type=int, help='submit every component in one large test cluster')
+    parser.add_argument('--offset', type=int,
+                        help='skip N input components before --limit (row offset, not an ID)')
+    parser.add_argument('--input', type=Path,
+                        help='component .json or Stage1 .jsonl; paths are relative to the project root')
+    parser.add_argument('--output', type=Path,
+                        help='new result JSONL path; defaults to outputs_stage2/<split>_prompts_<component_id>.jsonl')
+    parser.add_argument('--append', action='store_true',
+                        help='merge collected results into --output; skip identical IDs, reject conflicts')
+    parser.add_argument('--max-output-tokens', type=int, help='override config output token budget')
+    parser.add_argument('--model', help=f'override config model (default config: {MODEL})')
+    parser.add_argument('--reasoning-effort',
+                        choices=['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+                        help=f'model-supported reasoning effort (default: {REASONING_EFFORT})')
+    parser.add_argument('--temperature', type=_temperature, default=argparse.SUPPRESS,
+                        help='override config temperature (0–2); use none to omit it')
+    parser.add_argument('--style-seed', type=int,
+                        help='deterministic writing-style allocation seed (default: 0)')
+    parser.add_argument('--batch-id', help='retrieve/collect an existing batch without resubmission')
+    parser.add_argument('--wait', action='store_true', help='poll until the batch reaches a terminal status')
+    parser.add_argument('--poll-interval', type=float, default=30,
+                        help='seconds between status checks, from 1 to 60 (default: 30)')
+    parser.add_argument('--dry-run', action='store_true',
+                        help='print Batch input JSONL without calling OpenAI or saving files')
+    args = parser.parse_args(argv)
+    if args.batch_id and (any(value is not None for value in (
+            args.prompt_ids, args.limit, args.group_id, args.cluster_id, args.offset)) or args.dry_run):
+        parser.error('--batch-id cannot be combined with selection options or --dry-run')
+    if args.offset is not None and any(value is not None for value in (
+            args.prompt_ids, args.group_id, args.cluster_id)):
+        parser.error('--offset can only be combined with --limit')
+    if not 1 <= args.poll_interval <= 60:
+        parser.error('--poll-interval must be between 1 and 60 seconds')
+
     try:
-        parsed = parse_json_output(reply)
-        return set(parsed) == {'issues'} and isinstance(parsed['issues'], list) and not parsed['issues']
-    except (ValueError, TypeError):
-        return False
+        config = load_config(args.config)
+        for key in ('model', 'reasoning_effort', 'max_output_tokens', 'style_seed'):
+            if getattr(args, key) is not None:
+                config[key] = getattr(args, key)
+        if hasattr(args, 'temperature'):
+            config['temperature'] = args.temperature
+        config = validate_config(config)
+        split = args.split or 'test'
+        components = None
+        if not args.batch_id:
+            source = project_path(args.input) if args.input else input_path(config, split)
+            components = load_components(source, args.prompt_ids, args.limit,
+                                         group_id=args.group_id, cluster_id=args.cluster_id,
+                                         offset=args.offset if args.offset is not None else 0)
+            # Allocate from the full source so --id/--limit previews use exactly
+            # the same writing preferences as a complete group or split run.
+            style_components = load_components(source)
+            data = batch_jsonl(build_batch_requests(
+                components, split, max_output_tokens=config['max_output_tokens'],
+                style_components=style_components, style_seed=config['style_seed'],
+                model=config['model'], reasoning_effort=config['reasoning_effort'],
+                temperature=config['temperature'],
+            ))
+            if args.dry_run:
+                sys.stdout.write(data.decode('utf-8'))
+                return 0
+            print(f'Selected {len(components)} components from {source}', file=sys.stderr)
+
+        output_path = (project_path(args.output) if args.output else
+                       default_output_path(split, config) if not args.batch_id else None)
+        if output_path is not None and output_path.exists():
+            if not args.append:
+                raise FileExistsError(f'Result already exists; choose a new --output path '
+                                      f'or use --append: {output_path}')
+            if not args.batch_id:
+                existing_ids = {row['id'] for row in load_saved_rows(output_path, split)}
+                overlap = existing_ids & {c['prompt_id'] for c in components}
+                if overlap:
+                    raise ValueError(f'{len(overlap)} selected IDs are already saved in {output_path}; '
+                                     'choose an uncollected range instead of resubmitting')
+
+        from dotenv import load_dotenv
+        from openai import APIError, OpenAI
+
+        load_dotenv(project_path('.env'), override=False)
+        if not os.environ.get('OPENAI_API_KEY', '').strip():
+            raise ValueError('Set OPENAI_API_KEY in the environment or the project root .env')
+        with OpenAI(max_retries=0, timeout=120.0) as client:
+            try:
+                if args.batch_id:
+                    batch = client.batches.retrieve(args.batch_id)
+                else:
+                    batch = submit_batch(client, components, split, data)
+                    del data  # Release the request JSONL as soon as submission succeeds.
+                _report_status(batch)
+                split = batch_split(batch, args.split)
+                if output_path is None:
+                    output_path = default_output_path(split, config)
+                    if output_path.exists() and not args.append:
+                        raise FileExistsError(f'Result already exists; choose a new --output path '
+                                              f'or use --append: {output_path}')
+                if args.wait:
+                    batch = wait_for_batch(client, batch, args.poll_interval, _report_status)
+                if batch.status not in TERMINAL_STATUSES:
+                    print(f'Run again with --batch-id {batch.id} to collect; add --wait to poll. '
+                          'For custom inputs, reuse the same --input file.', file=sys.stderr)
+                    return 0
+                if components is None:
+                    source = project_path(args.input) if args.input else input_path(config, split)
+                    components = restore_components(client, batch, source, split)
+                results, failures = collect_results(client, batch, components, split)
+                if results:
+                    saved = save_results(output_path, results, split, append=args.append)
+                    verb = 'Merged' if args.append else 'Saved'
+                    print(f'{verb}: {saved} ({len(results)} batch results)', file=sys.stderr)
+                # Persist results before removing the remote input. A failed
+                # save leaves the upload available for a later collection.
+                delete_input_file(client, batch)
+                print(f'Input file cleaned up: {batch.input_file_id}', file=sys.stderr)
+            except APIError as exc:
+                status = getattr(exc, 'status_code', None)
+                code = getattr(exc, 'code', None)
+                raise RuntimeError(f'OpenAI request failed ({type(exc).__name__}, '
+                                   f'status={status}, code={code})') from exc
+
+        for identifier, error in failures.items():
+            print(f'{identifier}: {error}', file=sys.stderr)
+        if batch.status == 'failed' and batch.errors:
+            for error in batch.errors.data or []:
+                print(f'Batch validation error: code={error.code}, line={error.line}', file=sys.stderr)
+        print(f'Batch {batch.id}: status={batch.status}, saved={len(results)}, '
+              f'failed={len(failures)}', file=sys.stderr)
+        return 1 if failures or batch.status != 'completed' else 0
+    except KeyboardInterrupt:
+        print('Interrupted. If a batch ID was printed, the batch continues; '
+              'use --batch-id to collect later.', file=sys.stderr)
+        return 130
+    except ImportError as exc:
+        print(f'Missing dependency: {exc}. Install '
+              'stage2_prompt_generation/requirements.txt.', file=sys.stderr)
+        return 1
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError, IndexError, AttributeError) as exc:
+        print(f'Stage2 Batch failed: {exc}', file=sys.stderr)
+        return 1
 
 
-def generate_prompt(identifier, scene, vocab, client, *, config=None,
-                    instructions=None):
-    """Generate one {id, prompt} without verification, retries, or output writes."""
-    config = default_config() if config is None else config
-    instructions = load_instructions() if instructions is None else instructions
-    reply, = _generate_once(client, [generation_messages(scene, vocab, instructions['realize'])],
-                            generation_settings(config['generation']), config['seed'])
-    return {'id': identifier, 'prompt': _prompt_text(reply)}
-
-
-def _write_prompts(split, cases, vocab, client, config, instructions, offset):
-    settings = generation_settings(config['generation'])
-    generated = 0
-    # Line buffering makes each completed row visible even on the network FS.
-    with (OUTPUT_DIR / OUTPUT_NAMES[split]).open('w', encoding='utf-8', buffering=1) as stream:
-        for batch in _batches(cases, settings['batch_size']):
-            replies = _generate_once(client, [
-                generation_messages(scene, vocab, instructions['realize']) for _, scene in batch
-            ], settings, config['seed'] + offset + generated)
-            for (identifier, _), reply in zip(batch, replies):
-                stream.write(json.dumps({'id': identifier, 'prompt': _prompt_text(reply)}, ensure_ascii=False) + '\n')
-            generated += len(batch)
-            calls = getattr(client, 'calls', None)
-            detail = ''
-            if calls:
-                call = calls[-1]
-                detail = (f', finish_reasons={dict(Counter(call["finish_reasons"]))}'
-                          f', completion_tokens={call["completion_tokens"]}')
-            print(f'{split}: generated={generated}/{len(cases)}{detail}', flush=True)
-    return generated
-
-
-def _verify_prompts(split, cases, vocab, client, config, instructions, offset):
-    settings = {**config['critic'], 'schema_name': 'critic', 'json_schema': CRITIC_SCHEMA}
-    total = passed = 0
-    prompt_path = OUTPUT_DIR / OUTPUT_NAMES[split]
-    verification_path = OUTPUT_DIR / f'{split}_verification.jsonl'
-    with prompt_path.open(encoding='utf-8') as prompts, \
-            verification_path.open('w', encoding='utf-8', buffering=1) as stream:
-        for batch in _batches(cases, settings['batch_size']):
-            conversations = []
-            for identifier, scene in batch:
-                row = json.loads(next(prompts, 'null'))
-                if (not isinstance(row, dict) or set(row) != {'id', 'prompt'}
-                        or row['id'] != identifier or not isinstance(row['prompt'], str)):
-                    raise ValueError(f'{prompt_path}: expected prompt for id {identifier}')
-                conversations.append([
-                    {'role': 'system', 'content': instructions['critic']},
-                    {'role': 'user', 'content': json.dumps({
-                        'source_scene': english_scene(scene, vocab), 'prompt': row['prompt'],
-                    }, ensure_ascii=False)},
-                ])
-            replies = _generate_once(client, conversations, settings,
-                                     config['seed'] + 2000000 + offset + total)
-            for (identifier, _), reply in zip(batch, replies):
-                ok = _critic_ok(reply)
-                stream.write(json.dumps({'id': identifier, 'ok': ok, 'reply': reply}, ensure_ascii=False) + '\n')
-                passed += int(ok)
-            total += len(batch)
-            print(f'{split}: verified={total}/{len(cases)}, passed={passed}, failed={total - passed}', flush=True)
-        if next(prompts, None) is not None:
-            raise ValueError(f'{prompt_path}: unexpected extra prompt rows')
-    summary = {'total': total, 'passed': passed, 'failed': total - passed,
-               'pass_rate': passed / total if total else 0.0}
-    (OUTPUT_DIR / f'{split}_summary.json').write_text(
-        json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8',
-    )
-    return summary
-
-
-def _run_splits(splits, vocab, client, config, instructions):
-    prepared = {}
-    for split, cases in splits.items():
-        if split not in OUTPUT_NAMES:
-            raise ValueError('split must be train or test')
-        prepared[split] = list(cases)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    # A new run invalidates previous outputs for the selected splits, including
-    # verification summaries which would otherwise describe the old prompts.
-    for split in prepared:
-        for name in [OUTPUT_NAMES[split], f'{split}_verification.jsonl', f'{split}_summary.json']:
-            (OUTPUT_DIR / name).unlink(missing_ok=True)
-
-    expected = sum(len(cases) for cases in prepared.values())
-    print(f'Stage2: generate {expected} prompts, then verify {expected} prompts; '
-          f'LLM requests={2 * expected}, retries=0', flush=True)
-    offset = 0
-    for split, cases in prepared.items():
-        offset += _write_prompts(split, cases, vocab, client, config, instructions, offset)
-
-    # Both train and test files are complete and closed before any critic call.
-    print('Stage2: all prompts saved; starting one-pass critic verification.', flush=True)
-    summaries = {}
-    offset = 0
-    for split, cases in prepared.items():
-        summaries[split] = _verify_prompts(split, cases, vocab, client, config, instructions, offset)
-        offset += len(cases)
-    return summaries
-
-
-def generate_split(split, cases, vocab, client, *, config=None, instructions=None):
-    """Generate a whole split, verify it once, and return its summary."""
-    config = default_config() if config is None else config
-    instructions = load_instructions() if instructions is None else instructions
-    return _run_splits({split: cases}, vocab, client, config, instructions)[split]
-
-
-def generate_train_test(train_cases, test_cases, vocab, client, *,
-                        config=None, instructions=None):
-    """Save ALL train/test prompts before verifying either split; return summaries.
-
-    Preserve every input ID and its order, including prompts that fail the critic
-    or duplicate another prompt. Verification never rewrites the prompt files.
-    """
-    config = default_config() if config is None else config
-    instructions = load_instructions() if instructions is None else instructions
-    return _run_splits({'train': train_cases, 'test': test_cases}, vocab, client, config, instructions)
+if __name__ == '__main__':
+    raise SystemExit(main())
