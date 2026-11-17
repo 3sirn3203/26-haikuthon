@@ -124,7 +124,8 @@ Test는 정확히 다섯 필드를 저장한다.
   v5 전체는 train 4,000개, test 16,000개이며 test는 query 8,000개와 나머지 후보 8,000개를 포함한다.
 - Train 입력의 `cluster_id: null`은 출력하지 않는다. 원본 component, API 응답, usage,
   reasoning, 문체 ID, 검수·요약 파일, 별도 `test_queries.jsonl`은 저장하지 않는다.
-- Stage3는 위 형식과 기존 `id`/`prompt` 두 필드 형식을 모두 읽는다. 기본 입력도 v5로 연결했다.
+- Stage3는 위 형식과 기존 `id`/`prompt` 두 필드 형식을 모두 읽는다. 현재 기본 입력은
+  `train_prompts_v3.jsonl`과 `test_prompts_v3.jsonl`이다.
   평가 질의는 test 결과에서 `is_query=true`로 선택한다.
 
 ## 프롬프트와 문체 배정

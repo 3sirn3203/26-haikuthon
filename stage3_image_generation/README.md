@@ -9,19 +9,25 @@ import만으로 서버 실행, 다운로드, 출력 저장을 수행하지 않�
 프로젝트 루트의 다음 두 파일을 입력으로 사용한다.
 
 ```text
-outputs_stage2/train_prompts_v2.jsonl
-outputs_stage2/test_prompts_v2.jsonl
+outputs_stage2/train_prompts_v3.jsonl
+outputs_stage2/test_prompts_v3.jsonl
 ```
 
-각 행은 정확히 `id`, `prompt` 두 필드를 갖는다.
+각 행은 `id`, `prompt`를 포함한다. 기존 두 필드 형식과 Stage2의 새 형식을 모두 지원한다.
+Train은 `group_id`까지 세 필드, test는 `group_id`, `cluster_id`, `is_query`까지 다섯 필드다.
+메타데이터는 이미지 프롬프트에 추가하지 않으며, `is_query=false`도 이미지 후보로 처리한다.
 입력 파일명은 `config.yaml`의 `prompt_files.train`, `prompt_files.test`로 선택한다.
 이 키가 없는 기존 설정 파일은 이전 `train_prompts.jsonl`, `test_prompts.jsonl`을 사용한다.
+현재 v3 입력은 train 4,000행, test 16,000행이다.
+Test에는 이미지 후보 전체 16,000행을 입력한다. 평가 질의 8,000행만 담긴
+`test_queries.jsonl`을 이미지 생성 입력으로 사용하지 않는다.
 
 ```json
 {"id": "0000", "prompt": "Exactly two red cups on a white table."}
 ```
 
-ID는 네 자리 숫자 문자열이다. split 내부 중복은 허용하지 않으며, 번호가 빠져 있어도
+ID는 최소 네 자리 숫자 문자열이며 `10000`~`15999` 같은 다섯 자리 ID도 지원한다.
+split 내부 중복은 허용하지 않으며, 번호가 빠져 있어도
 원래 ID와 입력 순서를 유지한다. train과 test는 같은 ID를 사용할 수 있다.
 빈 프롬프트, 잘못된 스키마, 빈 파일은 오류 처리한다. 요청한 모든 split의 전체 입력을
 검증한 뒤 API를 호출한다. `--limit` 밖의 행도 입력 검증에 포함한다.
@@ -38,6 +44,10 @@ outputs_stage3/
       prompt.txt
 ```
 
+새 Stage2 결과의 `is_query=true` 행을 평가 질의로 선택하고 `test/*/image.png` 전체를 이미지 후보로 사용한다.
+질의의 `id`와 이미지 폴더 이름이 정답을 연결한다. 기존 `test_queries.jsonl`을 사용하는 평가도 가능하다.
+`prompt.txt`는 이미지 생성·재개용 원문이다.
+
 `prompt.txt`는 실제 요청에 사용한 문자열을 UTF-8로 저장한다. 공백·줄바꿈을 바꾸거나
 마지막에 줄바꿈을 추가하지 않는다. manifest, metadata, report, 로그, lock 파일은 만들지 않는다.
 실행 중 저장용 임시 파일이 생길 수 있으며, 정상 종료 시 정리하고 다음 실행에서도 정리한다.
@@ -47,7 +57,7 @@ outputs_stage3/
 Linux/NVIDIA CUDA GPU와 Python 3.12 이미지 전용 환경을 사용한다.
 `requirements-image.txt`와 `requirements-image.lock.txt`는 legacy의 이미지용 파일과 동일하다.
 vLLM과 vLLM-Omni는 모두 0.32.0이다. 실행에 사용할 Python 환경에 이 의존성이 준비되어 있어야 한다.
-텍스트 모델 서버를 종료해 GPU를 비운 뒤 프로젝트 루트에서 실행한다.
+이미지 모델용 GPU를 확보한 뒤 프로젝트 루트에서 실행한다. Stage2 OpenAI Batch 실행에는 GPU가 필요하지 않다.
 
 ```bash
 # 명령 확인만 수행: 모델 다운로드나 GPU 사용 없음

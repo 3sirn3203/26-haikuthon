@@ -8,12 +8,12 @@ import io
 import json
 import os
 from pathlib import Path
-import re
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .config import project_path, validate_config
+from stage1_components.files import valid_prompt_id
 
 
 SPLITS = ('train', 'test')
@@ -37,10 +37,17 @@ def read_prompts(path):
             continue
         try:
             row = json.loads(line, object_pairs_hook=unique_object)
-            if not isinstance(row, dict) or set(row) != {'id', 'prompt'}:
-                raise ValueError('Each row must contain exactly id and prompt')
-            if not isinstance(row['id'], str) or not re.fullmatch(r'[0-9]{4}', row['id']):
-                raise ValueError('id must be a four-digit string')
+            schemas = ({'id', 'prompt'}, {'id', 'prompt', 'group_id'},
+                       {'id', 'prompt', 'group_id', 'cluster_id', 'is_query'})
+            if not isinstance(row, dict) or set(row) not in schemas:
+                raise ValueError('Expected id/prompt, optionally with train or test grouping metadata')
+            for field in ('group_id', 'cluster_id'):
+                if field in row and (type(row[field]) is not int or row[field] < 0):
+                    raise ValueError(f'{field} must be a nonnegative integer')
+            if 'is_query' in row and type(row['is_query']) is not bool:
+                raise ValueError('is_query must be a boolean')
+            if not valid_prompt_id(row['id']):
+                raise ValueError('id must be a canonical numeric string with at least four digits')
             if row['id'] in seen:
                 raise ValueError(f'Duplicate id: {row["id"]}')
             if not isinstance(row['prompt'], str) or not row['prompt'].strip():
