@@ -1,5 +1,0 @@
-exp_id: chan_lee/b1_openclip_h14
-category: honest
-method: "B1 zero-shot dual encoder: OpenCLIP ViT-H/14 LAION-2B; cosine similarity over the full pool"
-eval_split: test
-retriever: {type: openclip, model: ViT-H-14, pretrained: laion2b_s32b_b79k, precision: fp16, batch_size: 32, num_workers: 8}

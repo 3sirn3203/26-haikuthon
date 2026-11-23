@@ -1,9 +1,0 @@
-exp_id: seohyun_jang/b3_siglip2_bundle_l4__qwen35_4b_full
-category: honest
-method: "B3 two-stage: fine-tuned SigLIP2 (b2_siglip2_bundle_l4) top-K reranked by Qwen3.5-4B yes/no logit; stratified 1600-query subset (Private 1400 + Public 200)"
-stage1_config: configs/exp/sj_b2_siglip2_bundle_l4_stage1.yaml
-reranker: {type: vlm_yesno, model: Qwen/Qwen3.5-4B, dtype: bf16, batch_size: 10, max_pixels: 200704}
-k_max: 10
-k_list: [3, 5, 10]
-subset: {private: 1400, public: 200, seed: 0}
-time_budget_min: 30

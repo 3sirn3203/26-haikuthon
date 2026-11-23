@@ -1,4 +1,0 @@
-# CPU-only OpenAI Batch client; no local text model or GPU required.
-openai>=2.0.0,<3
-python-dotenv>=1.0.0,<2
-PyYAML==6.0.3

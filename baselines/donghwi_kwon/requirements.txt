@@ -1,6 +1,0 @@
-# Use the existing CUDA-compatible Colab/server environment.
-# These are dependency names, not a reconstruction of the original run's lockfile.
-torch
-numpy
-Pillow
-safetensors

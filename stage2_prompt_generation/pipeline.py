@@ -48,7 +48,7 @@ def main(argv=None):
     parser.add_argument('--input', type=Path,
                         help='component .json or Stage1 .jsonl; paths are relative to the project root')
     parser.add_argument('--output', type=Path,
-                        help='new result JSONL path; defaults to outputs_stage2/<split>_prompts_<component_id>.jsonl')
+                        help='new result JSONL path; default config uses outputs_stage2/<split>_prompts.jsonl')
     parser.add_argument('--append', action='store_true',
                         help='merge collected results into --output; skip identical IDs, reject conflicts')
     parser.add_argument('--max-output-tokens', type=int, help='override config output token budget')
@@ -175,8 +175,8 @@ def main(argv=None):
               'use --batch-id to collect later.', file=sys.stderr)
         return 130
     except ImportError as exc:
-        print(f'Missing dependency: {exc}. Install '
-              'stage2_prompt_generation/requirements.txt.', file=sys.stderr)
+        print(f'Missing dependency: {exc}. From the project root, run '
+              'python -m pip install -r requirements.txt.', file=sys.stderr)
         return 1
     except (OSError, ValueError, RuntimeError, KeyError, TypeError, IndexError, AttributeError) as exc:
         print(f'Stage2 Batch failed: {exc}', file=sys.stderr)

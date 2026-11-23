@@ -1,5 +1,0 @@
-# Separate environment: Omni and upstream vLLM must have matching versions.
-vllm==0.32.0
-vllm-omni==0.32.0
-PyYAML==6.0.3
-Pillow==13.0.0

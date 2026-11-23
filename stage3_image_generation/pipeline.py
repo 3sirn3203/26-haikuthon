@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+from threading import Lock
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -144,6 +145,83 @@ def save_pair(directory, image_bytes, prompt):
         clear_temporary_files(directory)
 
 
+class SplitOutput:
+    """Flat train_v1 layout for train, per-ID pairs for test and old runs."""
+
+    def __init__(self, output, split):
+        self.directory = output / split
+        self.manifest = self.directory / 'prompts.jsonl'
+        self.images = self.directory / 'images'
+        self.flat = split == 'train'
+        self.prompts = {}
+        self.lock = Lock()
+        if not self.flat or not self.directory.exists():
+            return
+        if any(valid_prompt_id(p.name) and p.is_dir() for p in self.directory.iterdir()):
+            if self.manifest.exists() or self.images.exists():
+                raise ValueError(f'Mixed train layouts in {self.directory}')
+            self.flat = False  # Resume an older output root without regenerating images.
+            return
+        if self.manifest.is_file():
+            with self.manifest.open(encoding='utf-8') as stream:
+                for line in stream:
+                    row = json.loads(line, object_pairs_hook=unique_object)
+                    if (not isinstance(row, dict) or set(row) != {'id', 'prompts'}
+                            or not valid_prompt_id(row['id']) or row['id'] in self.prompts
+                            or not isinstance(row['prompts'], str) or not row['prompts'].strip()):
+                        raise ValueError(f'Invalid or duplicate record in {self.manifest}')
+                    self.prompts[row['id']] = row['prompts']
+
+    def completed(self, row, config):
+        key = row['id']
+        if not self.flat:
+            return completed(self.directory / key, row, config)
+        if key not in self.prompts:
+            return False
+        if self.prompts[key] != row['prompt']:
+            raise ValueError(f'Prompt differs for {self.directory}/{key}')
+        try:
+            validate_image((self.images / f'{key}.png').read_bytes(), config)
+        except (OSError, ValueError, SyntaxError):
+            return False
+        return True
+
+    def _publish_prompts(self, prompts):
+        temp = self.manifest.with_suffix('.jsonl.tmp')
+        try:
+            with temp.open('w', encoding='utf-8', newline='\n') as stream:
+                for key in sorted(prompts, key=int):
+                    stream.write(json.dumps({'id': key, 'prompts': prompts[key]}, ensure_ascii=False) + '\n')
+                stream.flush()
+                os.fsync(stream.fileno())
+            temp.replace(self.manifest)
+            self.prompts = prompts
+        finally:
+            temp.unlink(missing_ok=True)
+
+    def save(self, row, image_bytes):
+        key, prompt = row['id'], row['prompt']
+        if not self.flat:
+            return save_pair(self.directory / key, image_bytes, prompt)
+        self.images.mkdir(parents=True, exist_ok=True)
+        image = self.images / f'{key}.png'
+        temp = image.with_suffix('.png.tmp')
+        try:
+            with temp.open('wb') as stream:
+                stream.write(image_bytes)
+                stream.flush()
+                os.fsync(stream.fileno())
+            with self.lock:
+                if key in self.prompts and self.prompts[key] != prompt:
+                    # An interrupted --overwrite must not pair a new image with its old caption.
+                    self._publish_prompts({k: v for k, v in self.prompts.items() if k != key})
+                temp.replace(image)
+                if key not in self.prompts:
+                    self._publish_prompts({**self.prompts, key: prompt})
+        finally:
+            temp.unlink(missing_ok=True)
+
+
 def server_url(config):
     return f'http://{config["server"]["host"]}:{config["server"]["port"]}'
 
@@ -155,7 +233,7 @@ def check_server(config):
         raise ValueError('The expected image model is not served; start serve with the same --config')
 
 
-def generate_one(split, row, config, output):
+def generate_one(split, row, config, layout):
     body = request_body(split, row, config)
     client = config['client']
     started = time.monotonic()
@@ -178,11 +256,11 @@ def generate_one(split, row, config, output):
                 raise RuntimeError(f'Image request failed: {detail}') from exc
             print(f'RETRY {split}/{row["id"]} ({attempt}/{client["max_attempts"]}): {detail}', flush=True)
             time.sleep(2)
-    save_pair(output / split / row['id'], image_bytes, row['prompt'])
+    layout.save(row, image_bytes)
     return time.monotonic() - started
 
 
-def generate_pending(split, rows, config, output):
+def generate_pending(split, rows, config, layout):
     """Keep at most concurrency jobs in flight; drain them on the first Ctrl-C."""
     pool = ThreadPoolExecutor(max_workers=config['client']['concurrency'])
     remaining, futures = iter(rows), {}
@@ -191,7 +269,7 @@ def generate_pending(split, rows, config, output):
     def submit_next():
         row = next(remaining, None)
         if row is not None:
-            futures[pool.submit(generate_one, split, row, config, output)] = row
+            futures[pool.submit(generate_one, split, row, config, layout)] = row
 
     def collect(future, row):
         nonlocal generated, failed
@@ -240,12 +318,13 @@ def generate(config, *, split='all', limit=None, overwrite=False):
     output.mkdir(parents=True, exist_ok=True)
     with output_lock(output):
         pending, skipped = {}, 0
+        layouts = {name: SplitOutput(output, name) for name in splits}
         for name, rows in selected.items():
             pending[name] = []
             for row in rows:
-                directory = output / name / row['id']
-                clear_temporary_files(directory)
-                if not overwrite and completed(directory, row, config):
+                if not layouts[name].flat:
+                    clear_temporary_files(output / name / row['id'])
+                if not overwrite and layouts[name].completed(row, config):
                     skipped += 1
                 else:
                     pending[name].append(row)
@@ -258,7 +337,7 @@ def generate(config, *, split='all', limit=None, overwrite=False):
         for name, rows in pending.items():
             if not rows:
                 continue
-            saved, errors, interrupted = generate_pending(name, rows, config, output)
+            saved, errors, interrupted = generate_pending(name, rows, config, layouts[name])
             generated += saved
             failed += errors
             if interrupted:

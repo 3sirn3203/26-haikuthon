@@ -1,0 +1,28 @@
+# Provisional values. Change these before the first paid submission.
+input_dir: outputs_stage2
+prompt_files:
+  train: train_prompts.jsonl
+  test: test_prompts.jsonl
+# Train uses train/images/<ID>.png and train/prompts.jsonl.
+output_dir: outputs_stage3
+default_split: train
+model: gpt-image-2.5-flare
+generation:
+  quality: medium
+  width: 1024
+  height: 1024
+  background: opaque
+  output_format: png
+  # Only used for jpeg/webp, never sent for PNG.
+  output_compression: null
+  moderation: auto
+# null keeps the API resolution. Otherwise resize without changing aspect ratio.
+save_size: [768, 768]
+batch:
+  max_requests: 4000
+  completion_window: 24h
+  poll_interval_seconds: 30
+  # Delete remote request JSONL after collection, if every requested ID has a result.
+  delete_input_after_collect: true
+client:
+  timeout_seconds: 120

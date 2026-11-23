@@ -26,12 +26,14 @@ def validate_sampling(reasoning_effort, temperature):
 def validate_config(config):
     if not isinstance(config, dict):
         raise ValueError('Stage2 config must be a mapping')
-    required = {'input_dir', 'output_dir', 'component_id', 'model',
+    required = {'input_dir', 'output_dir', 'model',
                 'reasoning_effort', 'max_output_tokens', 'style_seed'}
-    if not required <= set(config) or set(config) - required - {'temperature'}:
-        raise ValueError(f'Stage2 config requires {sorted(required)}; temperature is optional')
+    optional = {'temperature', 'component_id', 'output_id'}
+    if not required <= set(config) or set(config) - required - optional:
+        raise ValueError(f'Stage2 config requires {sorted(required)}; optional keys: {sorted(optional)}')
     config = {'temperature': None, **config}
-    component_names(config['component_id'])
+    component_names(config.get('component_id'))
+    component_names(config.get('output_id'))
     for key in ('input_dir', 'output_dir', 'model'):
         if not isinstance(config[key], str) or not config[key].strip():
             raise ValueError(f'{key} must be a nonempty string')
@@ -71,10 +73,11 @@ def default_config():
 
 
 def input_path(config, split):
-    names = dict(zip(('train', 'test'), component_names(config['component_id'])))
+    names = dict(zip(('train', 'test'), component_names(config.get('component_id'))))
     return project_path(config['input_dir']) / names[split]
 
 
 def output_path(config, split):
-    name = input_path(config, split).name.replace('_components', '_prompts', 1)
+    names = component_names(config.get('output_id', config.get('component_id')))
+    name = dict(zip(('train', 'test'), names))[split].replace('_components', '_prompts', 1)
     return project_path(config['output_dir']) / name

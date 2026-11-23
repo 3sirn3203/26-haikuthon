@@ -30,7 +30,8 @@ def serve(config, *, dry_run=False):
         return 0
     executable = Path(sys.executable).with_name('vllm')
     if not executable.is_file():
-        raise RuntimeError('vllm is missing from this Python environment; install requirements-image.lock.txt')
+        raise RuntimeError('vllm is missing. From the project root, run '
+                           'python -m pip install -r requirements-stage3-qwen.txt in the Qwen environment')
     import torch
     if not torch.cuda.is_available():
         raise RuntimeError('The image server requires an NVIDIA CUDA GPU')

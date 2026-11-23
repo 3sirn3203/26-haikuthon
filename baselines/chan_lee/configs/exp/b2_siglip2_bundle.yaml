@@ -1,8 +1,0 @@
-exp_id: chan_lee/b2_siglip2_bundle
-category: honest
-method: "B2 fine-tuned dual encoder: SigLIP2 so400m, last 4 blocks + heads, sigmoid loss; whole stage1 bundles per batch = hard in-batch negatives (a')"
-uses_train_finetune: true
-uses_train_hard_negatives: false
-eval_split: test
-retriever: {type: openclip, model: ViT-SO400M-16-SigLIP2-384, pretrained: webli, precision: fp16, batch_size: 32, num_workers: 8}
-finetune: {epochs: 5, lr: 1.0e-5, batch_size: 32, train_last_blocks: 4, batching: bundle, use_hard_negatives: false, num_workers: 8, seed: 0}

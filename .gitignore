@@ -1,93 +1,10 @@
-# Generated datasets, reports, logs, and download bundles
-/outputs_stage3
-# Keep Stage1 component data under version control.
-/archives/
-/exports/
-/logs/
-/reports/
+/outputs_stage3/*
+!/outputs_stage3/.gitkeep
 
-# Model/download caches and local Python environments
-.cache/
-.venv*/
-venv/
-env/
-
-# Python bytecode, build outputs, and test/tool caches
 __pycache__/
-*.py[cod]
-*$py.class
-build/
-dist/
-*.egg-info/
-.eggs/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.tox/
-.nox/
-.coverage
-.coverage.*
-htmlcov/
-coverage.xml
-.ipynb_checkpoints/
-
-# Local experiments and verification
-/test/
-/verification/
-
-# Training artifacts
-checkpoints/
-wandb/
-mlruns/
-
-# Model weights, embedding/score arrays, and large archives
-*.safetensors
-*.ckpt
-*.pt
-*.pth
-*.bin
-*.gguf
-*.ggml
-*.onnx
-*.npy
-*.npz
-*.tar
-*.tar.gz
-*.tar.zst
-*.tgz
-*.zip
-*.7z
-
-# Runtime files and local credentials
-*.log
-*.pid
-*.tmp
-*.partial
-.env
-.env.*
-!.env.example
-!.env.sample
-!.env.template
-.aws/
-.ssh/
-*.pem
-*.key
-id_rsa
-id_ed25519
-credentials.json
-service-account*.json
-
-# macOS and editor temporary files
 .DS_Store
-._*
-.Spotlight-V100/
-.Trashes/
-*.swp
-*.swo
-*~
+*/.DS_Store
 
-test*/
-train*/
-
-test*.zip
-train*.zip
+.venv
+.env
+*.pptx

@@ -1,5 +1,0 @@
-exp_id: chan_lee/b1_dfn5b_h14_378
-category: honest
-method: "B1 zero-shot dual encoder: Apple DFN5B ViT-H/14@378; cosine similarity over the full pool"
-eval_split: test
-retriever: {type: openclip, model: ViT-H-14-378-quickgelu, pretrained: dfn5b, precision: fp16, batch_size: 32, num_workers: 8}

@@ -1,7 +1,5 @@
 input_dir: outputs_stage1
 output_dir: outputs_stage2
-# Match Stage1 train/test_components_<component_id>.jsonl.
-component_id: v5
 model: gpt-6.1-terra
 reasoning_effort: none
 temperature: 1.4

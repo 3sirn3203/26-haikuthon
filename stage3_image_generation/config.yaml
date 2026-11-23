@@ -1,8 +1,8 @@
 input_dir: outputs_stage2
 prompt_files:
-  train: train_prompts_v3.jsonl
+  train: train_prompts.jsonl
   # Include both is_query=true and is_query=false image candidates.
-  test: test_prompts_v3.jsonl
+  test: test_prompts.jsonl
 output_dir: outputs_stage3
 model:
   id: Qwen/Qwen-Image-2512

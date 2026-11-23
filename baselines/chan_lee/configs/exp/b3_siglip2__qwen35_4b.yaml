@@ -1,9 +1,0 @@
-exp_id: chan_lee/b3_siglip2__qwen35_4b
-category: honest
-method: "B3 two-stage: SigLIP2 top-K reranked by Qwen3.5-4B yes/no logit (VQAScore-style)"
-stage1_config: configs/exp/b1_siglip2_so400m384.yaml
-reranker: {type: vlm_yesno, model: Qwen/Qwen3.5-4B, dtype: bf16, batch_size: 10, max_pixels: 200704}
-k_max: 20
-k_list: [5, 10, 20]
-subset: {private: 300, public: 100, seed: 0}
-time_budget_min: 75

@@ -1,5 +1,6 @@
-# Stage1 component generation and Stage2 prompt generation through the OpenAI API.
-# Matches the existing stage-specific requirements; runs without a local model.
-PyYAML==6.0.3
+# Stage 1, Stage 2, Stage 3 OpenAI API, and the Stage 3 image client.
+httpx>=0.23,<1
 openai>=2.0.0,<3
+Pillow>=11,<13
 python-dotenv>=1.0.0,<2
+PyYAML==6.0.3
